@@ -25,4 +25,18 @@ class MonitorController extends Controller
 
         return response()->json(['message' => 'Monitor eklendi', 'monitor' => $monitor], 201);
     }
+
+    public function destroy($id)
+    {
+        $monitor = Monitor::findOrFail($id);
+        $monitor->delete(); 
+        
+        return response()->json(['message' => 'Monitor silindi'], 200);
+    }
+
+    public function checkAll()
+    {
+        \Illuminate\Support\Facades\Artisan::call('uptime:check');
+        return response()->json(['message' => 'Tüm sitelere ping atıldı']);
+    }
 }
