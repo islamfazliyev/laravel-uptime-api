@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Monitor;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreMonitorRequest;
 
 class MonitorController extends Controller
 {
@@ -13,13 +14,9 @@ class MonitorController extends Controller
         return response()->json($monitors);
     }
 
-    public function store(Request $request)
+    public function store(StoreMonitorRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'url' => 'required|url',
-            'check_interval' => 'integer|min:1'
-        ]);
+        $validated = $request->validated();
 
         $monitor = Monitor::create($validated);
 
