@@ -14,6 +14,7 @@ let submittedTime = 0
 let isLoop = false;
 let timerInterval;
 
+newUrlInput.value = "https://";
 
 function startTimer() {
 
@@ -102,7 +103,7 @@ addUrlBtn.addEventListener('click', async () => {
         });
 
         if (response.ok) {
-            newUrlInput.value = '';
+            newUrlInput.value = "https://";
             fetchMonitors();
         }
 

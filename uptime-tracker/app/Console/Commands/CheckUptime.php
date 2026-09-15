@@ -16,17 +16,42 @@ class CheckUptime extends Command
     public function handle()
     {
         $monitors = Monitor::all();
-
+        
         foreach ($monitors as $monitor) {
             $startTime = microtime(true);
-
+            
+            $statusCode = null;
+            $isUp = false;
+            $oldState = $monitor->status;
+            
             try {
                 $response = Http::timeout(10)->get($monitor->url);
                 $statusCode = $response->status();
                 $isUp = $response->successful(); // 200-299 arası dönüşler başarılı sayılır
+                if (!$isUp) {
+                    if ($oldState != 'down') {
+                        Http::post(env('DISCORD_ALERT_WEBHOOK'), [
+                            'content' => "🚨 **WARNING:** {$monitor->url} is returning an error! (Status Code: {$statusCode})"
+                        ]);
+                    }
+                } else {
+                    if ($oldState === 'down') {
+                        Http::post(env('DISCORD_ALERT_WEBHOOK'), [
+                            'content' => "✅ **RESOLVED:** {$monitor->url} is back online!"
+                        ]);
+                    }
+                }
+
             } catch (\Throwable $th) {
+                
                 $statusCode = null;
                 $isUp = false;
+
+                if ($oldState !== 'down') {
+                    Http::post(env('DISCORD_ALERT_WEBHOOK'), [
+                        'content' => "🔥 **CRITICAL OUTAGE:** {$monitor->url} is unreachable! (Server down or timeout)"
+                    ]);
+                }
             }
 
             $responseTime = round((microtime(true) - $startTime) * 1000);
