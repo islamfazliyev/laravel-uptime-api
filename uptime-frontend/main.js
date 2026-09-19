@@ -53,11 +53,34 @@ async function sendRequests() {
     }
 }
 
+function updateHeaderStats(monitors) {
+    const pulseDot = document.getElementById('pulse-dot');
+    const statUp = document.getElementById('stat-up');
+    const statDown = document.getElementById('stat-down');
+    const statTotal = document.getElementById('stat-total');
+    if (!pulseDot || !statUp || !statDown || !statTotal) return;
+
+    const upCount = monitors.filter(m => m.status === 'up').length;
+    const downCount = monitors.filter(m => m.status === 'down').length;
+
+    statUp.textContent = upCount;
+    statDown.textContent = downCount;
+    statTotal.textContent = monitors.length;
+
+    pulseDot.classList.remove('is-idle', 'is-down');
+    if (monitors.length === 0) {
+        pulseDot.classList.add('is-idle');
+    } else if (downCount > 0) {
+        pulseDot.classList.add('is-down');
+    }
+}
+
 async function fetchMonitors() {
     const response = await fetch(`${API_URL}/monitors`);
     const monitors = await response.json();
 
     urlList.innerHTML = '';
+    updateHeaderStats(monitors);
 
     monitors.forEach(monitor => {
         try {
@@ -84,9 +107,11 @@ async function fetchMonitors() {
 
 }
 addUrlBtn.addEventListener('click', async () => {
-    console.log('aa')
+    const timerErrorContainer = document.getElementById("timer-error-container");
+
     const url = newUrlInput.value.trim();
     if (!url) return;
+    timerErrorContainer.innerHTML = "";
 
     try {
         const response = await fetch(`${API_URL}/monitors`, {
@@ -105,16 +130,18 @@ addUrlBtn.addEventListener('click', async () => {
         if (!response.ok) {
             const errorData = await response.json();
 
-            // Laravel'den gelen check_interval hatasını yakala
             if (errorData.errors && errorData.errors.check_interval) {
-                alert("Error: " + errorData.errors.check_interval[0]);
+                timerErrorContainer.innerHTML = `<span class="text-danger"> Error: ${errorData.errors.check_interval[0]} </span>`;
             } else {
-                alert("An unexpected error occurred while adding the monitor.");
+                timerErrorContainer.innerHTML = `<span class="text-danger"> An unexpected error occurred while adding the monitor. </span>`;
             }
             return;
+        } else {
+
+            timerErrorContainer.innerHTML = `<span class="text-success"> Sucess: ${newUrlInput.value} Added Succesfully     </span>`;
         }
 
-
+        
         newUrlInput.value = "https://";
         fetchMonitors();
 
