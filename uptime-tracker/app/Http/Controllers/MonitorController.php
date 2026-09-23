@@ -8,9 +8,9 @@ use App\Http\Requests\StoreMonitorRequest;
 
 class MonitorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $monitors = Monitor::orderBy('last_checked_at', 'desc')->get();
+        $monitors = $request->user()->monitors()->orderBy('last_checked_at', 'desc')->get();
         return response()->json($monitors);
     }
 
@@ -18,17 +18,17 @@ class MonitorController extends Controller
     {
         $validated = $request->validated();
 
-        $monitor = Monitor::create($validated);
+        $monitor = $request->user()->monitors()->create($validated);
 
         return response()->json(['message' => 'Monitor eklendi', 'monitor' => $monitor], 201);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $monitor = Monitor::findOrFail($id);
+        $monitor = Monitor::where('user_id', $request->user()->id)->findOrFail($id);
         $monitor->delete(); 
         
-        return response()->json(['message' => 'Monitor silindi'], 200);
+        return response()->json(['message' => 'Monitor Deleted'], 200);
     }
 
     public function checkAll()
