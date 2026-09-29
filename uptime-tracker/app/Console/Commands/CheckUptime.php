@@ -2,72 +2,37 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
+use App\Jobs\CheckSingleMonitorJob;
 use App\Models\Monitor;
-use App\Models\Ping;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Console\Command;
 
 class CheckUptime extends Command
 {
     protected $signature = 'uptime:check';
-    protected $description = 'Veritabanındaki tüm URL lere ping atar ve durumu günceller.';
-
+    protected $description = 'Süresi gelen monitor\'lar için kontrol job\'ları kuyruğa ekler.';
 
     public function handle()
     {
-        $monitors = Monitor::all();
-        
-        foreach ($monitors as $monitor) {
-            $startTime = microtime(true);
-            
-            $statusCode = null;
-            $isUp = false;
-            $oldState = $monitor->status;
-            
-            try {
-                $response = Http::timeout(10)->get($monitor->url);
-                $statusCode = $response->status();
-                $isUp = $response->successful(); // 200-299 arası dönüşler başarılı sayılır
-                if (!$isUp) {
-                    if ($oldState != 'down') {
-                        Http::post(env('DISCORD_ALERT_WEBHOOK'), [
-                            'content' => "🚨 **WARNING:** {$monitor->url} is returning an error! (Status Code: {$statusCode})"
-                        ]);
-                    }
-                } else {
-                    if ($oldState === 'down') {
-                        Http::post(env('DISCORD_ALERT_WEBHOOK'), [
-                            'content' => "✅ **RESOLVED:** {$monitor->url} is back online!"
-                        ]);
-                    }
-                }
+        // The scheduler runs every minute. A monitor is due when
+        // last_checked_at + check_interval has passed. The 30s tolerance
+        // stops a 1-minute monitor from drifting to a 2-minute cycle.
+        $due = Monitor::all()->filter(function (Monitor $monitor) {
+            return $monitor->last_checked_at === null
+                || $monitor->last_checked_at
+                    ->copy()
+                    ->addMinutes($monitor->check_interval)
+                    ->lte(now()->addSeconds(30));
+        });
 
-            } catch (\Throwable $th) {
-                
-                $statusCode = null;
-                $isUp = false;
-
-                if ($oldState !== 'down') {
-                    Http::post(env('DISCORD_ALERT_WEBHOOK'), [
-                        'content' => "🔥 **CRITICAL OUTAGE:** {$monitor->url} is unreachable! (Server down or timeout)"
-                    ]);
-                }
-            }
-
-            $responseTime = round((microtime(true) - $startTime) * 1000);
-
-            $monitor->update([
-                'status' => $isUp ? 'up' : 'down',
-                'last_checked_at' => now(),
-            ]);
-
-            Ping::create([
-                'monitor_id' => $monitor->id,
-                'status_code' => $statusCode,
-                'response_time_ms' => $responseTime,
-            ]);
-
-            $this->info("Kontrol edildi: {$monitor->name} - Durum: " . ($isUp ? 'UP' : 'DOWN'));
+        if ($due->isEmpty()) {
+            $this->info('Kontrol edilecek monitor yok.');
+            return;
         }
+
+        foreach ($due as $monitor) {
+            CheckSingleMonitorJob::dispatch($monitor);
+        }
+
+        $this->info("{$due->count()} monitor kontrol için kuyruğa eklendi.");
     }
 }

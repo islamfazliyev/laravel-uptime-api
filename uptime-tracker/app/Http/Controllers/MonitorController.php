@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMonitorRequest;
+use App\Jobs\CheckSingleMonitorJob;
 use App\Models\Monitor;
 use Illuminate\Http\Request;
-use App\Http\Requests\StoreMonitorRequest;
 
 class MonitorController extends Controller
 {
@@ -26,14 +27,49 @@ class MonitorController extends Controller
     public function destroy(Request $request, $id)
     {
         $monitor = Monitor::where('user_id', $request->user()->id)->findOrFail($id);
-        $monitor->delete(); 
-        
+        $monitor->delete();
+
         return response()->json(['message' => 'Monitor Deleted'], 200);
     }
 
-    public function checkAll()
+    // Manual "check now": only the caller's monitors, queued, returns immediately
+    public function checkAll(Request $request)
     {
-        \Illuminate\Support\Facades\Artisan::call('uptime:check');
-        return response()->json(['message' => 'Tüm sitelere ping atıldı']);
+        $monitors = $request->user()->monitors;
+
+        foreach ($monitors as $monitor) {
+            CheckSingleMonitorJob::dispatch($monitor);
+        }
+
+        return response()->json([
+            'message' => 'Checks queued',
+            'count' => $monitors->count(),
+        ], 202);
+    }
+
+    public function stats(Request $request, $id)
+    {
+        $monitor = Monitor::where('user_id', $request->user()->id)->findOrFail($id);
+
+        $since = now()->subDay();
+
+        $total = $monitor->pings()->where('created_at', '>=', $since)->count();
+        $up = $monitor->pings()
+            ->where('created_at', '>=', $since)
+            ->whereBetween('status_code', [200, 299])
+            ->count();
+
+        $recent = $monitor->pings()
+            ->latest()
+            ->take(20)
+            ->get(['status_code', 'response_time_ms', 'created_at'])
+            ->reverse()
+            ->values();
+
+        return response()->json([
+            'uptime_24h' => $total > 0 ? round($up / $total * 100, 2) : null,
+            'total_checks_24h' => $total,
+            'recent' => $recent,
+        ]);
     }
 }
