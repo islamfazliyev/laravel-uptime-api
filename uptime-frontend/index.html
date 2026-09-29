@@ -1,4 +1,5 @@
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<!DOCTYPE html>
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,18 +56,24 @@
                     <div id="control" class="panel h-100">
                         <h2 class="panel-title">Controller</h2>
 
-                        <label for="timer-input">Delay per check (minutes)</label>
+                        <label for="interval-input">Check interval for new urls (minutes)</label>
                         <div class="d-flex gap-2 mb-3">
-                            <input type="number" id="timer-input" class="form-control w-25" value="1">
-                            <button id="timer-submit-btn" class="btn btn-secondary px-4">Submit</button>
-                            <button id="start-btn" class="btn btn-secondary px-4">Start</button>
-                            <button id="stop-btn" class="btn btn-secondary px-4">Stop</button>
+                            <input type="number" id="interval-input" class="form-control w-25" value="1" min="1">
+                            <button id="check-now-btn" class="btn btn-secondary px-4">Check now</button>
                         </div>
                         <div id="timer-error-container"></div>
 
-                        <label>Watched urls</label>
+                        <label>Watched urls <span class="text-secondary">(click one for stats)</span></label>
                         <div id="urls">
                             <ul id="url-list" class="list-group list-group-flush overflow-auto" style="max-height: 250px;"></ul>
+                        </div>
+
+                        <div id="stats-panel" class="mt-4 d-none">
+                            <div class="d-flex justify-content-between align-items-baseline mb-2">
+                                <strong id="stats-title"></strong>
+                                <span id="stats-uptime" class="text-secondary" style="font-family: var(--font-mono); font-size: 0.78rem;"></span>
+                            </div>
+                            <canvas id="stats-chart" height="140"></canvas>
                         </div>
                     </div>
                 </div>
@@ -124,6 +131,7 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
         <script src="main.js"></script>
     </body>
 </html>

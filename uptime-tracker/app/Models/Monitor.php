@@ -19,13 +19,21 @@ class Monitor extends Model
         'last_checked_at',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'last_checked_at' => 'datetime',
+            'check_interval' => 'integer',
+        ];
+    }
+
     public function pings(): HasMany
     {
         return $this->hasMany(Ping::class);
     }
 
-    public function user(): BelongsTo {
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
-    
 }
