@@ -9,4 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 
-Schedule::command('uptime:check')->everyMinute();
+Schedule::command('uptime:check')->everyTenSeconds();

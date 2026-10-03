@@ -1,9 +1,14 @@
 const urlList = document.getElementById('url-list');
 const logContainer = document.getElementById('log-container');
+const lastLoggedCheck = {}; // monitor.id -> last_checked_at we've already written to the log
 const addUrlBtn = document.getElementById('add-url-btn');
 const newUrlInput = document.getElementById('new-url-input');
+const keywordInput = document.getElementById('keyword-input');
 const intervalInput = document.getElementById('interval-input');
 const checkNowBtn = document.getElementById('check-now-btn');
+const stopBtn = document.getElementById('stop-btn');
+
+const clearLogBtn = document.getElementById('clear-log-btn');
 
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
@@ -13,8 +18,10 @@ const logoutBtn = document.getElementById('logout-btn');
 
 const statsPanel = document.getElementById('stats-panel');
 
+let autoCheckInterval = null;
+const AUTO_CHECK_SECONDS = 3;
+
 const API_URL = 'http://127.0.0.1:8000/api';
-const REFRESH_MS = 10000;
 
 let statsChart = null;
 
@@ -197,7 +204,6 @@ async function fetchMonitors() {
         const monitors = await response.json();
 
         urlList.innerHTML = '';
-        logContainer.innerHTML = ''; // refreshed periodically, so don't stack duplicate log lines
         updateHeaderStats(monitors);
 
         monitors.forEach(monitor => {
@@ -219,7 +225,11 @@ async function fetchMonitors() {
             li.append(span, btn);
             urlList.appendChild(li);
 
-            if (monitor.status !== 'pending') {
+            // only append a log line when this monitor has a NEW check result,
+            // otherwise every periodic refresh would re-log the same event
+            if (monitor.status !== 'pending' && lastLoggedCheck[monitor.id] !== monitor.last_checked_at) {
+                lastLoggedCheck[monitor.id] = monitor.last_checked_at;
+
                 const time = monitor.last_checked_at ? new Date(monitor.last_checked_at).toLocaleTimeString() : '';
                 const color = monitor.status === 'up' ? 'text-success' : 'text-danger';
                 const logEntry = `<div><span class="text-secondary">[${time}]</span> <span class="${color}">[${monitor.status.toUpperCase()}]</span> ${escapeHtml(monitor.name)}</div>`;
@@ -294,7 +304,8 @@ addUrlBtn.addEventListener('click', async () => {
             body: JSON.stringify({
                 name: new URL(url).hostname,
                 url: url,
-                check_interval: intervalInput.value
+                check_interval: intervalInput.value,
+                keyword: keywordInput.value.trim() || null
             })
         });
 
@@ -337,8 +348,26 @@ window.deleteMonitor = async function (id) {
     }
 };
 
-checkNowBtn.addEventListener('click', sendRequests);
+checkNowBtn.addEventListener('click', () => {
+    if (autoCheckInterval) return;
+
+    fetchMonitors();
+    autoCheckInterval = setInterval(fetchMonitors, AUTO_CHECK_SECONDS * 1000);
+    checkNowBtn.disabled = true;
+    stopBtn.disabled = false;
+});
+
+stopBtn.addEventListener('click', () => {
+    clearInterval(autoCheckInterval);
+    autoCheckInterval = null;
+
+    checkNowBtn.disabled = false;
+    stopBtn.disabled = true;
+});
+
+clearLogBtn.addEventListener('click', () => {
+    logContainer.innerHTML = ''
+})
 
 updateAuthUI();
 fetchMonitors();
-setInterval(fetchMonitors, REFRESH_MS);

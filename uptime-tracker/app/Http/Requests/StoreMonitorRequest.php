@@ -23,6 +23,7 @@ class StoreMonitorRequest extends FormRequest
             'name' => 'required|string|max:255',
             'url' => 'required|url|max:255',
             'check_interval' => "required|integer|min:{$minDelay}",
+            'keyword' => 'nullable|string|max:255',
         ];
     }
 

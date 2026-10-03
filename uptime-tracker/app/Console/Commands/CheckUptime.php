@@ -20,8 +20,7 @@ class CheckUptime extends Command
             return $monitor->last_checked_at === null
                 || $monitor->last_checked_at
                     ->copy()
-                    ->addMinutes($monitor->check_interval)
-                    ->lte(now()->addSeconds(30));
+                    ->addSeconds($monitor->check_interval);
         });
 
         if ($due->isEmpty()) {

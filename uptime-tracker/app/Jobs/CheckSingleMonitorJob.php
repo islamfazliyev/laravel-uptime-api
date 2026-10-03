@@ -43,7 +43,11 @@ class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
         try {
             $response = Http::timeout(10)->get($monitor->url);
             $statusCode = $response->status();
-            $isUp = $response->successful(); // 2xx = up
+            $isUp = $response->successful();
+
+            if ($isUp && $monitor->keyword) {
+                $isUp = !str_contains($response->body(), $monitor->keyword);
+            }
         } catch (\Throwable $th) {
             $statusCode = null;
             $isUp = false;
@@ -74,16 +78,16 @@ class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
 
     private function notify(string $message): void
     {
-        $webhook = config('services.discord.webhook');
+        $webhook = env('DISCORD_ALERT_WEBHOOK');
 
         if (!$webhook) {
             return;
         }
 
         try {
-            Http::timeout(5)->post($webhook, ['content' => $message]);
+            $response = Http::timeout(5)->post($webhook, ['content' => $message]);
         } catch (\Throwable $th) {
-            report($th); // a failed alert must never break the check itself
+            report($th);
         }
     }
 }

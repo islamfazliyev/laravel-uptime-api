@@ -45,10 +45,12 @@
                         <div class="d-flex gap-2">
                             <input type="text" id="new-url-input" class="form-control" placeholder="https://example.com">
                             <button id="add-url-btn" class="btn btn-secondary px-4">+</button>
+                            <input type="text" id="keyword-input" class="form-control" placeholder="Keyword (optional)">
                         </div>
                     </div>
                     <div id="status" class="panel flex-grow-1">
                         <h2 class="panel-title">Activity</h2>
+                        <button id="clear-log-btn" class="btn btn-secondary">Clear Logs</button>
                         <div id="log-container" class="flex-grow-1 overflow-auto"></div>
                     </div>
                 </div>
@@ -60,6 +62,7 @@
                         <div class="d-flex gap-2 mb-3">
                             <input type="number" id="interval-input" class="form-control w-25" value="1" min="1">
                             <button id="check-now-btn" class="btn btn-secondary px-4">Check now</button>
+                            <button id="stop-btn" class="btn btn-outline-danger px-4">Stop</button>
                         </div>
                         <div id="timer-error-container"></div>
 

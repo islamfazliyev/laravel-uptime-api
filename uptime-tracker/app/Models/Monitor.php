@@ -14,6 +14,7 @@ class Monitor extends Model
     protected $fillable = [
         'name',
         'url',
+        'keyword',
         'check_interval',
         'status',
         'last_checked_at',
