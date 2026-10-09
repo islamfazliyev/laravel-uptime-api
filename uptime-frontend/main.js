@@ -9,6 +9,7 @@ const checkNowBtn = document.getElementById('check-now-btn');
 const stopBtn = document.getElementById('stop-btn');
 
 const clearLogBtn = document.getElementById('clear-log-btn');
+const saveLogBtn = document.getElementById('save-log-btn');
 
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');

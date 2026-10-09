@@ -56,19 +56,26 @@ class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
 
         $responseTime = (int) round((microtime(true) - $startTime) * 1000);
 
+        $currentState = 'down';
+        if ($isUp) {
+            $currentState = ($responseTime > $monitor->max_response_time_ms) ? 'degraded' : 'up';
+        }
         // Alert only when the state changes
-        if (!$isUp && $oldState !== 'down') {
+        if ($currentState === 'down' && $oldState !== 'down') {
             $this->notify($statusCode
                 ? "🚨 **WARNING:** {$monitor->url} is returning an error! (Status Code: {$statusCode})"
                 : "🔥 **CRITICAL OUTAGE:** {$monitor->url} is unreachable! (Server down or timeout)");
             $monitor->notify(new UptimeAlert($monitor, false, $statusCode));
-        } elseif ($isUp && $oldState === 'down') {
+        } elseif ($currentState === 'degraded' && $oldState !== 'degraded') {
+            $this->notify("⚠️ **DEGRADED PERFORMANCE:** {$monitor->url} works very slow. response time: {$responseTime}ms (Limit: {$monitor->max_response_time_ms}ms)");
+            
+        } elseif ($currentState === 'up' && $oldState !== 'up') {
             $this->notify("✅ **RESOLVED:** {$monitor->url} is back online!");
             $monitor->notify(new UptimeAlert($monitor, true, null));
         }
 
         $monitor->update([
-            'status' => $isUp ? 'up' : 'down',
+            'status' => $currentState,
             'last_checked_at' => now(),
         ]);
 
