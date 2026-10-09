@@ -18,6 +18,7 @@ class MonitorController extends Controller
     public function store(StoreMonitorRequest $request)
     {
         $validated = $request->validated();
+        $validated['certificate_check_enabled'] = $request->boolean('certificate_check_enabled', true);
 
         $monitor = $request->user()->monitors()->create($validated);
 
@@ -30,6 +31,24 @@ class MonitorController extends Controller
         $monitor->delete();
 
         return response()->json(['message' => 'Monitor Deleted'], 200);
+    }
+
+    public function pause(Request $request, Monitor $monitor)
+    {
+        if ($monitor->user_id !== $request->user()->id) {
+            abort(403);
+        }
+        $monitor->update(['is_paused' => true]);
+        return response()->json(['message' => 'Monitor paused successfully', 'monitor' => $monitor]);
+    }
+
+    public function resume(Request $request, Monitor $monitor)
+    {
+        if ($monitor->user_id !== $request->user()->id) {
+            abort(403);
+        }
+        $monitor->update(['is_paused' => false]);
+        return response()->json(['message' => 'Monitor resumed successfully', 'monitor' => $monitor]);
     }
 
     // Manual "check now": only the caller's monitors, queued, returns immediately

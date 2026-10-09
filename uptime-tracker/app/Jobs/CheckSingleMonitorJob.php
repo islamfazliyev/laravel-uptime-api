@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use App\Notifications\UptimeAlert;
 
 class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
 {
@@ -60,8 +61,10 @@ class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
             $this->notify($statusCode
                 ? "🚨 **WARNING:** {$monitor->url} is returning an error! (Status Code: {$statusCode})"
                 : "🔥 **CRITICAL OUTAGE:** {$monitor->url} is unreachable! (Server down or timeout)");
+            $monitor->notify(new UptimeAlert($monitor, false, $statusCode));
         } elseif ($isUp && $oldState === 'down') {
             $this->notify("✅ **RESOLVED:** {$monitor->url} is back online!");
+            $monitor->notify(new UptimeAlert($monitor, true, null));
         }
 
         $monitor->update([
@@ -87,7 +90,7 @@ class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
         try {
             $response = Http::timeout(5)->post($webhook, ['content' => $message]);
         } catch (\Throwable $th) {
-            report($th);
+                report($th);
         }
     }
 }

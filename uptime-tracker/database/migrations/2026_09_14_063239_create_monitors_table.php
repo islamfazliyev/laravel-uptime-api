@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('url');
             $table->integer('check_interval')->default(1);
+            $table->integer('max_response_time_ms')->default(2000);
             $table->string('status')->default('pending');
             $table->timestamp('last_checked_at')->nullable();
             $table->timestamps();

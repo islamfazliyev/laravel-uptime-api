@@ -1,6 +1,6 @@
 const urlList = document.getElementById('url-list');
 const logContainer = document.getElementById('log-container');
-const lastLoggedCheck = {}; // monitor.id -> last_checked_at we've already written to the log
+const lastLoggedCheck = {};
 const addUrlBtn = document.getElementById('add-url-btn');
 const newUrlInput = document.getElementById('new-url-input');
 const keywordInput = document.getElementById('keyword-input');
@@ -24,6 +24,7 @@ const AUTO_CHECK_SECONDS = 3;
 const API_URL = 'http://127.0.0.1:8000/api';
 
 let statsChart = null;
+let currentMonitors = [];
 
 newUrlInput.value = "https://";
 
@@ -150,16 +151,12 @@ if (logoutBtn) {
     });
 }
 
-// Scheduling now lives on the backend (schedule:work + queue:work).
-// This only asks the API to queue an immediate check for the user's monitors.
 async function sendRequests() {
     try {
         await fetch(`${API_URL}/monitors/check`, {
             method: 'POST',
             headers: getAuthHeaders()
         });
-
-        // jobs run in the background, give the worker a moment
         setTimeout(fetchMonitors, 3000);
     } catch (error) {
         console.error("Error during ping process:", error);
@@ -202,6 +199,7 @@ async function fetchMonitors() {
         }
 
         const monitors = await response.json();
+        currentMonitors = monitors;
 
         urlList.innerHTML = '';
         updateHeaderStats(monitors);
@@ -215,25 +213,39 @@ async function fetchMonitors() {
             span.style.cursor = 'pointer';
             span.title = 'Show stats';
             span.textContent = monitor.url;
+            if (monitor.is_paused) {
+                span.classList.add('text-secondary', 'text-decoration-line-through');
+            }
             span.addEventListener('click', () => showStats(monitor.id, monitor.name));
+
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'd-flex gap-2';
+
+            const pauseBtn = document.createElement('button');
+            pauseBtn.className = monitor.is_paused ? 'btn btn-sm btn-outline-success' : 'btn btn-sm btn-outline-warning';
+            pauseBtn.textContent = monitor.is_paused ? '▶ Resume' : '⏸ Pause';
+            pauseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePauseMonitor(monitor.id, monitor.is_paused);
+            });
 
             const btn = document.createElement('button');
             btn.className = 'btn btn-sm btn-outline-danger';
             btn.textContent = 'X';
-            btn.addEventListener('click', () => deleteMonitor(monitor.id));
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteMonitor(monitor.id);
+            });
 
-            li.append(span, btn);
+            controlsDiv.append(pauseBtn, btn);
+            li.append(span, controlsDiv);
             urlList.appendChild(li);
 
-            // only append a log line when this monitor has a NEW check result,
-            // otherwise every periodic refresh would re-log the same event
             if (monitor.status !== 'pending' && lastLoggedCheck[monitor.id] !== monitor.last_checked_at) {
                 lastLoggedCheck[monitor.id] = monitor.last_checked_at;
-
                 const time = monitor.last_checked_at ? new Date(monitor.last_checked_at).toLocaleTimeString() : '';
                 const color = monitor.status === 'up' ? 'text-success' : 'text-danger';
                 const logEntry = `<div><span class="text-secondary">[${time}]</span> <span class="${color}">[${monitor.status.toUpperCase()}]</span> ${escapeHtml(monitor.name)}</div>`;
-
                 logContainer.insertAdjacentHTML('afterbegin', logEntry);
             }
         });
@@ -244,6 +256,8 @@ async function fetchMonitors() {
 
 async function showStats(id, name) {
     try {
+        const monitor = currentMonitors.find(m => m.id === id);
+
         const res = await fetch(`${API_URL}/monitors/${id}/stats`, {
             headers: getAuthHeaders()
         });
@@ -253,9 +267,22 @@ async function showStats(id, name) {
 
         document.getElementById('stats-title').textContent = name;
         document.getElementById('stats-uptime').textContent =
-            data.uptime_24h === null
-                ? 'No checks in the last 24h'
-                : `${data.uptime_24h}% uptime (last 24h, ${data.total_checks_24h} checks)`;
+        data.uptime_24h === null
+        ? 'No checks in the last 24h'
+        : `${data.uptime_24h}% uptime (last 24h, ${data.total_checks_24h} checks)`;
+
+        const sslText = document.getElementById('ssl-status-text');
+        if (monitor && monitor.certificate_check_enabled && monitor.url.startsWith('https://')) {
+            if (monitor.certificate_expiration_date) {
+                const expDate = new Date(monitor.certificate_expiration_date).toLocaleDateString();
+                const statusColor = monitor.certificate_status === 'valid' ? 'text-success' : (monitor.certificate_status === 'expired' ? 'text-danger' : 'text-warning');
+                sslText.innerHTML = `Expires: <strong>${expDate}</strong> (<span class="${statusColor}">${monitor.certificate_status.toUpperCase()}</span>)`;
+            } else {
+                sslText.innerHTML = '<span class="text-secondary">Waiting for first SSL check...</span>';
+            }
+        } else {
+            sslText.innerHTML = '<span class="text-secondary">N/A (Not HTTPS or disabled)</span>';
+        }
 
         const labels = data.recent.map(p => new Date(p.created_at).toLocaleTimeString());
         const values = data.recent.map(p => p.response_time_ms);
@@ -268,11 +295,11 @@ async function showStats(id, name) {
                 labels,
                 datasets: [{
                     label: 'Response time (ms)',
-                    data: values,
-                    borderColor: '#35d68e',
-                    backgroundColor: 'rgba(53, 214, 142, 0.1)',
-                    fill: true,
-                    tension: 0.3
+                               data: values,
+                               borderColor: '#35d68e',
+                               backgroundColor: 'rgba(53, 214, 142, 0.1)',
+                               fill: true,
+                               tension: 0.3
                 }]
             },
             options: {
@@ -301,21 +328,20 @@ addUrlBtn.addEventListener('click', async () => {
         const response = await fetch(`${API_URL}/monitors`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({
-                name: new URL(url).hostname,
-                url: url,
-                check_interval: intervalInput.value,
-                keyword: keywordInput.value.trim() || null
-            })
+                                     body: JSON.stringify({
+                                         name: new URL(url).hostname,
+                                                          url: url,
+                                                          check_interval: intervalInput.value,
+                                                          keyword: keywordInput.value.trim() || null
+                                     })
         });
 
         if (!response.ok) {
             const errorData = await response.json();
-
             if (errorData.errors && errorData.errors.check_interval) {
                 timerErrorContainer.innerHTML = `<span class="text-danger">Error: ${escapeHtml(errorData.errors.check_interval[0])}</span>`;
             } else {
-                timerErrorContainer.innerHTML = `<span class="text-danger">An unexpected error occurred while adding the monitor.</span>`;
+                timerErrorContainer.innerHTML = `<span class="text-danger">An unexpected error occurred.</span>`;
             }
             return;
         }
@@ -348,6 +374,22 @@ window.deleteMonitor = async function (id) {
     }
 };
 
+window.togglePauseMonitor = async function (id, currentlyPaused) {
+    const action = currentlyPaused ? 'resume' : 'pause';
+    try {
+        const response = await fetch(`${API_URL}/monitors/${id}/${action}`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            fetchMonitors();
+        }
+    } catch (error) {
+        console.error('Toggle pause failed:', error);
+    }
+};
+
 checkNowBtn.addEventListener('click', () => {
     if (autoCheckInterval) return;
 
@@ -367,7 +409,7 @@ stopBtn.addEventListener('click', () => {
 
 clearLogBtn.addEventListener('click', () => {
     logContainer.innerHTML = ''
-})
+});
 
 updateAuthUI();
 fetchMonitors();

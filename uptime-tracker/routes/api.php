@@ -19,4 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/monitors/check', [MonitorController::class, 'checkAll']);
     Route::get('/monitors/{id}/stats', [MonitorController::class, 'stats']);
     Route::delete('/monitors/{id}', [MonitorController::class, 'destroy']);
+
+    Route::post('/monitors/{monitor}/pause', [MonitorController::class, 'pause']);
+    Route::post('/monitors/{monitor}/resume', [MonitorController::class, 'resume']);
 });
