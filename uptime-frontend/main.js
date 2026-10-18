@@ -1,3 +1,4 @@
+
 const urlList = document.getElementById('url-list');
 const logContainer = document.getElementById('log-container');
 const lastLoggedCheck = {};
@@ -246,7 +247,7 @@ async function fetchMonitors() {
                 lastLoggedCheck[monitor.id] = monitor.last_checked_at;
                 const time = monitor.last_checked_at ? new Date(monitor.last_checked_at).toLocaleTimeString() : '';
                 const color = monitor.status === 'up' ? 'text-success' : 'text-danger';
-                const logEntry = `<div><span class="text-secondary">[${time}]</span> <span class="${color}">[${monitor.status.toUpperCase()}]</span> ${escapeHtml(monitor.name)}</div>`;
+                const logEntry = `<div><span class="text-secondary">[${time}]</span> <span class="${color}">[${monitor.status.toUpperCase()}]</span> <span>${escapeHtml(monitor.name)}</span> </div>`;
                 logContainer.insertAdjacentHTML('afterbegin', logEntry);
             }
         });
@@ -411,6 +412,29 @@ stopBtn.addEventListener('click', () => {
 clearLogBtn.addEventListener('click', () => {
     logContainer.innerHTML = ''
 });
+
+saveLogBtn.addEventListener('click', () => {
+    const spans = logContainer.querySelectorAll("span");
+
+    const textContent = Array.from(spans)
+        .map(span => span.textContent.trim())
+        .filter(text => text.length > 0)
+        .join("\n");
+
+    const blob = new Blob([textContent], { type: "text/plain;charset=utf-8"});
+
+    const link = document.createElement("a");
+
+    link.href = URL.createObjectURL(blob);
+    link.download = "aaa.txt";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+});
+
 
 updateAuthUI();
 fetchMonitors();

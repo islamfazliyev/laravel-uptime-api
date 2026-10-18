@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Uptime Tracker</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body class="bg-dark text-light d-flex p-4 p-lg-5 justify-content-lg-center min-vh-100 flex-column">
+        <div id="main" class="container w-100" style="max-width: 1000px;">
+            <div class="app-header">
+                <p class="app-title">
+                    <span id="pulse-dot" class="pulse-dot is-idle"></span>
+                    Uptime
+                </p>
+                <div class="header-stats">
+                    <div class="stat">
+                        <span id="stat-up" class="stat-value up">0</span>
+                        <span class="stat-label">up</span>
+                    </div>
+                    <div class="stat">
+                        <span id="stat-down" class="stat-value down">0</span>
+                        <span class="stat-label">down</span>
+                    </div>
+                    <div class="stat">
+                        <span id="stat-total" class="stat-value">0</span>
+                        <span class="stat-label">watched</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button id="login-modal-btn" class="btn btn-secondary px-3" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
+                    <button id="register-modal-btn" class="btn btn-secondary px-3" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
+                    <button id="logout-btn" class="btn btn-outline-danger px-3 d-none">Logout</button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-5 d-flex flex-column gap-4">
+                    <div id="adder" class="panel">
+                        <h2 class="panel-title">Add a url</h2>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="new-url-input" class="form-control" placeholder="https://example.com">
+                            <button id="add-url-btn" class="btn btn-secondary px-4">+</button>
+                            <input type="text" id="keyword-input" class="form-control" placeholder="Keyword (optional)">
+                        </div>
+                    </div>
+                    <div id="status" class="panel flex-grow-1">
+                        <h2 class="panel-title">Activity</h2>
+                        <button id="clear-log-btn" class="btn btn-secondary">Clear Logs</button>
+                        <button id="save-log-btn" class="btn btn-secondary">Save Logs</button>
+                        <div id="log-container" class="flex-grow-1 overflow-auto"></div>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div id="control" class="panel h-100">
+                        <h2 class="panel-title">Controller</h2>
+
+                        <label for="interval-input">Check interval for new urls (minutes)</label>
+                        <div class="d-flex gap-2 mb-3">
+                            <input type="number" id="interval-input" class="form-control w-25" value="1" min="1">
+                            <button id="check-now-btn" class="btn btn-secondary px-4">Check now</button>
+                            <button id="stop-btn" class="btn btn-outline-danger px-4">Stop</button>
+                        </div>
+                        <div id="timer-error-container"></div>
+
+                        <label>Watched urls <span class="text-secondary">(click one for stats)</span></label>
+                        <div id="urls">
+                            <ul id="url-list" class="list-group list-group-flush overflow-auto" style="max-height: 250px;"></ul>
+                        </div>
+
+                        <div id="stats-panel" class="mt-4 d-none">
+                            <div class="d-flex justify-content-between align-items-baseline mb-2">
+                                <strong id="stats-title"></strong>
+                                <span id="stats-uptime" class="text-secondary" style="font-family: var(--font-mono); font-size: 0.78rem;"></span>
+                            </div>
+
+                            <div id="ssl-status-container" class="mb-3 p-2 border border-secondary rounded bg-dark" style="font-size: 0.8rem; font-family: var(--font-mono);">
+                                <div class="text-secondary mb-1">SSL Certificate:</div>
+                                <div id="ssl-status-text" class="text-light"></div>
+                            </div>
+
+                            <canvas id="stats-chart" height="140"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content panel p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="panel-title m-0">Sign In</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" class="form-control" required placeholder="name@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" class="form-control" required placeholder="••••••••">
+                        </div>
+                        <div id="login-error-container" class="mb-3"></div>
+                        <button type="submit" class="btn btn-secondary w-100">Sign In</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content panel p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="panel-title m-0">Create Account</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="register-form">
+                        <div class="mb-3">
+                            <label for="register-name">Name</label>
+                            <input type="text" id="register-name" class="form-control" required placeholder="John Doe">
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-email">Email</label>
+                            <input type="email" id="register-email" class="form-control" required placeholder="name@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-password">Password</label>
+                            <input type="password" id="register-password" class="form-control" required placeholder="min 6 characters">
+                        </div>
+                        <div id="register-error-container" class="mb-3"></div>
+                        <button type="submit" class="btn btn-secondary w-100">Sign Up</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        <script src="main.js"></script>
+    </body>
+</html>
