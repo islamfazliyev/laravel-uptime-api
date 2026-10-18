@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cheetah Uptime — Try it once</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .result-status {
+            font-family: var(--font-mono);
+            font-size: 2.2rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .result-status.up { color: var(--up); }
+        .result-status.down { color: var(--down); }
+        .result-status.pending { color: var(--pending); }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+        }
+        .result-cell {
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 0.9rem;
+        }
+        .result-cell .k {
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            margin-bottom: 0.25rem;
+        }
+        .result-cell .v {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+        .step-list {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            line-height: 1.9;
+            color: var(--text-dim);
+            margin: 1rem 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .step-list li.done { color: var(--up); }
+        .step-list li.fail { color: var(--down); }
+        .step-list li.active { color: var(--pending); }
+    </style>
+</head>
+<body class="bg-dark text-light d-flex p-4 p-lg-5 justify-content-lg-center min-vh-100 flex-column">
+    <div id="main" class="container w-100" style="max-width: 640px;">
+
+        <div class="app-header">
+            <p class="app-title">
+                <span id="pulse-dot" class="pulse-dot is-idle"></span>
+                Cheetah Uptime
+            </p>
+            <a href="index.html" class="btn btn-secondary px-3">Full dashboard</a>
+        </div>
+
+        <div class="panel mb-4">
+            <h2 class="panel-title">Try it once</h2>
+            <p class="text-secondary" style="font-size: 0.85rem;">
+                Run a single check on your site and see exactly what you'd get. Nothing keeps running afterwards.
+            </p>
+
+            <label for="test-url">Website url</label>
+            <input type="text" id="test-url" class="form-control mb-3" placeholder="https://example.com">
+
+            <label for="test-keyword">Keyword to look for <span class="text-secondary">(optional)</span></label>
+            <input type="text" id="test-keyword" class="form-control mb-3" placeholder="e.g. Add to cart">
+
+            <button id="run-test-btn" class="btn btn-secondary w-100">Run test</button>
+            <div id="test-error" class="mt-3"></div>
+            <ul id="step-list" class="step-list d-none"></ul>
+        </div>
+
+        <div id="result-panel" class="panel d-none">
+            <h2 class="panel-title">Result</h2>
+            <div id="result-status" class="result-status pending">…</div>
+            <div id="result-host" class="text-secondary mt-2" style="font-family: var(--font-mono); font-size: 0.8rem;"></div>
+            <div class="result-grid">
+                <div class="result-cell"><div class="k">Response time</div><div class="v" id="res-time">—</div></div>
+                <div class="result-cell"><div class="k">Checked at</div><div class="v" id="res-when">—</div></div>
+                <div class="result-cell"><div class="k">SSL certificate</div><div class="v" id="res-ssl">—</div></div>
+                <div class="result-cell"><div class="k">Keyword</div><div class="v" id="res-keyword">—</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+        const POLL_EVERY_MS = 1500;
+        const POLL_MAX_TRIES = 20;
+
+        const urlInput = document.getElementById('test-url');
+        const keywordInput = document.getElementById('test-keyword');
+        const runBtn = document.getElementById('run-test-btn');
+        const errBox = document.getElementById('test-error');
+        const stepList = document.getElementById('step-list');
+        const resultPanel = document.getElementById('result-panel');
+        const pulseDot = document.getElementById('pulse-dot');
+
+        urlInput.value = 'https://';
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('token');
+            return {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            };
+        }
+
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+        function showError(msg) {
+            errBox.innerHTML = '';
+            const s = document.createElement('span');
+            s.className = 'text-danger';
+            s.style.fontFamily = 'var(--font-mono)';
+            s.style.fontSize = '0.78rem';
+            s.textContent = msg;
+            errBox.appendChild(s);
+        }
+
+        const STEPS = ['Creating a temporary monitor', 'Running the check', 'Reading the result', 'Cleaning up'];
+        function setStep(index, state) {
+            // state: 'active' | 'done' | 'fail'
+            stepList.classList.remove('d-none');
+            if (!stepList.children.length) {
+                STEPS.forEach(label => {
+                    const li = document.createElement('li');
+                    li.textContent = '○ ' + label;
+                    stepList.appendChild(li);
+                });
+            }
+            const li = stepList.children[index];
+            const icon = state === 'done' ? '✓' : state === 'fail' ? '✕' : '…';
+            li.className = state;
+            li.textContent = `${icon} ${STEPS[index]}`;
+        }
+
+        async function api(path, options = {}) {
+            const res = await fetch(`${API_URL}${path}`, { headers: getAuthHeaders(), ...options });
+            if (res.status === 401) {
+                throw new Error('Not signed in. Log in on the dashboard first, then come back.');
+            }
+            return res;
+        }
+
+        async function createMonitor(url, keyword) {
+            const res = await api('/monitors', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: new URL(url).hostname,
+                    url,
+                    check_interval: 1,
+                    keyword: keyword || null
+                })
+            });
+            if (!res.ok) {
+                let msg = 'Could not create the test.';
+                try {
+                    const d = await res.json();
+                    msg = d.message || (d.errors ? Object.values(d.errors).flat()[0] : msg);
+                } catch (_) {}
+                throw new Error(msg);
+            }
+            let data = {};
+            try { data = await res.json(); } catch (_) {}
+            let id = data.id ?? data.monitor?.id ?? data.data?.id;
+
+            // fallback: find the newest monitor with this url
+            if (id === undefined) {
+                const list = await (await api('/monitors')).json();
+                const match = list.filter(m => m.url === url).sort((a, b) => b.id - a.id)[0];
+                id = match?.id;
+            }
+            if (id === undefined) throw new Error('Test was created but its id could not be found.');
+            return id;
+        }
+
+        async function waitForResult(id) {
+            for (let i = 0; i < POLL_MAX_TRIES; i++) {
+                await sleep(POLL_EVERY_MS);
+                const res = await api('/monitors');
+                const list = await res.json();
+                const m = list.find(x => x.id === id);
+                if (m && m.status !== 'pending') return m;
+            }
+            throw new Error('The check took too long. The site may be very slow or unreachable.');
+        }
+
+        function renderResult(m, stats, keyword) {
+            const up = m.status === 'up';
+            resultPanel.classList.remove('d-none');
+
+            const st = document.getElementById('result-status');
+            st.textContent = m.status.toUpperCase();
+            st.className = 'result-status ' + (up ? 'up' : 'down');
+            document.getElementById('result-host').textContent = m.url;
+
+            pulseDot.classList.remove('is-idle', 'is-down');
+            if (!up) pulseDot.classList.add('is-down');
+
+            const last = stats && stats.recent && stats.recent.length ? stats.recent[stats.recent.length - 1] : null;
+            document.getElementById('res-time').textContent =
+                last && last.response_time_ms != null ? `${last.response_time_ms} ms` : '—';
+
+            document.getElementById('res-when').textContent =
+                m.last_checked_at ? new Date(m.last_checked_at).toLocaleTimeString() : '—';
+
+            let ssl = 'N/A';
+            if (m.url.startsWith('https://') && m.certificate_expiration_date) {
+                ssl = `${(m.certificate_status || '').toUpperCase()} · expires ${new Date(m.certificate_expiration_date).toLocaleDateString()}`;
+            } else if (m.url.startsWith('https://')) {
+                ssl = 'Not reported';
+            }
+            document.getElementById('res-ssl').textContent = ssl;
+
+            document.getElementById('res-keyword').textContent =
+                keyword ? `"${keyword}" ${up ? 'check passed' : 'not confirmed'}` : 'Not used';
+        }
+
+        runBtn.addEventListener('click', async () => {
+            errBox.innerHTML = '';
+            stepList.innerHTML = '';
+            resultPanel.classList.add('d-none');
+
+            const url = urlInput.value.trim();
+            const keyword = keywordInput.value.trim();
+
+            try { new URL(url); } catch (_) {
+                showError('Please enter a valid url, including https://');
+                return;
+            }
+
+            runBtn.disabled = true;
+            runBtn.textContent = 'Testing…';
+            let monitorId = null;
+            let step = 0;
+
+            try {
+                setStep(0, 'active');
+                monitorId = await createMonitor(url, keyword);
+                setStep(0, 'done');
+
+                step = 1; setStep(1, 'active');
+                await api('/monitors/check', { method: 'POST' });
+                const monitor = await waitForResult(monitorId);
+                setStep(1, 'done');
+
+                step = 2; setStep(2, 'active');
+                let stats = null;
+                try {
+                    const sres = await api(`/monitors/${monitorId}/stats`);
+                    if (sres.ok) stats = await sres.json();
+                } catch (_) {}
+                renderResult(monitor, stats, keyword);
+                setStep(2, 'done');
+            } catch (err) {
+                setStep(step, 'fail');
+                showError(err.message || 'Something went wrong.');
+            } finally {
+                // one test only: remove the temporary monitor so nothing keeps checking
+                if (monitorId !== null) {
+                    try {
+                        setStep(3, 'active');
+                        await api(`/monitors/${monitorId}`, { method: 'DELETE' });
+                        setStep(3, 'done');
+                    } catch (_) {
+                        setStep(3, 'fail');
+                    }
+                }
+                runBtn.disabled = false;
+                runBtn.textContent = 'Run test';
+            }
+        });
+    </script>
+</body>
+</html>
