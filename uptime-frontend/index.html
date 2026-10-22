@@ -108,19 +108,21 @@
 
         <!-- header -->
         <div class="app-header">
-            <p class="app-title">
+            <a href="index.html" class="app-title text-decoration-none">
                 <span class="pulse-dot"></span>
                 Cheetah Uptime
-            </p>
+            </a>
             <div class="header-stats">
                 <div class="stat">
                     <span class="stat-value up">●</span>
                     <span class="stat-label">systems ok</span>
                 </div>
             </div>
-            <div class="d-flex gap-2">
-                <a href="index.html" class="btn btn-secondary px-3">Login</a>
-                <a href="index.html" class="btn btn-secondary px-3">Register</a>
+            <div class="d-flex gap-2 align-items-center">
+                <a href="pricing.html" class="btn btn-secondary px-3">Pricing</a>
+                <a href="test.html" class="btn btn-secondary px-3">Try Once</a>
+                <a href="control-center.html#login" class="btn btn-secondary px-3">Login</a>
+                <a href="control-center.html#register" class="btn btn-accent px-3">Register</a>
             </div>
         </div>
 
@@ -134,52 +136,75 @@
         <!-- menu -->
         <div class="row g-4">
             <div class="col-md-6 col-lg-4">
-                <a href="index.html" class="panel menu-card">
+                <a href="control-center.html" class="panel menu-card">
                     <div class="menu-icon">▦</div>
                     <div class="menu-name"><span>Dashboard<span class="tag live">live</span></span><span class="menu-arrow">→</span></div>
                     <p class="menu-desc">Overview of every watched url, with up/down counts at a glance.</p>
                 </a>
             </div>
             <div class="col-md-6 col-lg-4">
-                <a href="index.html#adder" class="panel menu-card">
+                <a href="control-center.html#adder" class="panel menu-card">
                     <div class="menu-icon">+</div>
                     <div class="menu-name"><span>Add a URL</span><span class="menu-arrow">→</span></div>
                     <p class="menu-desc">Start watching a new site, optionally with a keyword check.</p>
                 </a>
             </div>
             <div class="col-md-6 col-lg-4">
-                <a href="index.html#control" class="panel menu-card">
+                <a href="control-center.html#control" class="panel menu-card">
                     <div class="menu-icon">◔</div>
                     <div class="menu-name"><span>Controller</span><span class="menu-arrow">→</span></div>
                     <p class="menu-desc">Set check intervals, run checks now, or stop monitoring.</p>
                 </a>
             </div>
             <div class="col-md-6 col-lg-4">
-                <a href="index.html#stats-panel" class="panel menu-card">
+                <a href="control-center.html#stats-panel" class="panel menu-card">
                     <div class="menu-icon">∿</div>
                     <div class="menu-name"><span>Stats &amp; Charts</span><span class="menu-arrow">→</span></div>
                     <p class="menu-desc">Response-time charts and uptime percentage per url.</p>
                 </a>
             </div>
             <div class="col-md-6 col-lg-4">
-                <a href="index.html#ssl-status-container" class="panel menu-card">
+                <a href="control-center.html#ssl-status-container" class="panel menu-card">
                     <div class="menu-icon">⚿</div>
                     <div class="menu-name"><span>SSL Certificates</span><span class="menu-arrow">→</span></div>
                     <p class="menu-desc">See when each certificate expires before it bites you.</p>
                 </a>
             </div>
             <div class="col-md-6 col-lg-4">
-                <a href="index.html#status" class="panel menu-card">
+                <a href="control-center.html#status" class="panel menu-card">
                     <div class="menu-icon">≡</div>
                     <div class="menu-name"><span>Activity Log</span><span class="menu-arrow">→</span></div>
                     <p class="menu-desc">Every check, in order. Clear it or save it to a file.</p>
                 </a>
             </div>
+            <div class="col-md-6 col-lg-6">
+                <a href="pricing.html" class="panel menu-card">
+                    <div class="menu-icon" style="color: var(--accent);">$</div>
+                    <div class="menu-name"><span>Pricing &amp; Plans<span class="tag save">save 20%</span></span><span class="menu-arrow">→</span></div>
+                    <p class="menu-desc">Explore Hobby, Pro, and Business tiers. Compare intervals, URL limits, and webhook alerts.</p>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-6">
+                <a href="test.html" class="panel menu-card">
+                    <div class="menu-icon" style="color: var(--pending);">⚡</div>
+                    <div class="menu-name"><span>Try It Once</span><span class="menu-arrow">→</span></div>
+                    <p class="menu-desc">Run an immediate single check on any URL with keyword search and SSL inspection. No account required.</p>
+                </a>
+            </div>
         </div>
 
         <div class="footer-bar">
-            <span>Cheetah Uptime</span>
-            <span>stay fast. stay up.</span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="fw-semibold text-light">Cheetah Uptime</span>
+                <span>•</span>
+                <a href="index.html">Menu</a>
+                <a href="control-center.html">Dashboard</a>
+                <a href="test.html">Try Once</a>
+                <a href="pricing.html">Pricing</a>
+            </div>
+            <div>
+                <span>stay fast. stay up.</span>
+            </div>
         </div>
     </div>
 

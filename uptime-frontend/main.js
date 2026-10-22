@@ -438,3 +438,23 @@ saveLogBtn.addEventListener('click', () => {
 
 updateAuthUI();
 fetchMonitors();
+
+function checkHashModal() {
+    if (!localStorage.getItem('token')) {
+        if (window.location.hash === '#register' && registerModalBtn) {
+            const el = document.getElementById('registerModal');
+            if (el && window.bootstrap) {
+                const modal = new bootstrap.Modal(el);
+                modal.show();
+            }
+        } else if (window.location.hash === '#login' && loginModalBtn) {
+            const el = document.getElementById('loginModal');
+            if (el && window.bootstrap) {
+                const modal = new bootstrap.Modal(el);
+                modal.show();
+            }
+        }
+    }
+}
+checkHashModal();
+window.addEventListener('hashchange', checkHashModal);

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cheetah Uptime — Pricing & Plans</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-dark text-light d-flex p-4 p-lg-5 justify-content-lg-center min-vh-100 flex-column">
+    <div id="main" class="container w-100" style="max-width: 1040px;">
+
+        <!-- Header -->
+        <header class="app-header">
+            <a href="index.html" class="app-title text-decoration-none">
+                <span class="pulse-dot"></span>
+                Cheetah Uptime
+            </a>
+
+            <nav class="d-none d-md-flex align-items-center gap-3">
+                <a href="index.html" class="text-secondary text-decoration-none" style="font-size: 0.85rem;">Menu</a>
+                <a href="control-center.html" class="text-secondary text-decoration-none" style="font-size: 0.85rem;">Dashboard</a>
+                <a href="test.html" class="text-secondary text-decoration-none" style="font-size: 0.85rem;">Try Once</a>
+                <a href="pricing.html" class="text-light text-decoration-none fw-semibold" style="font-size: 0.85rem;">
+                    Pricing <span class="tag live ms-1">Active</span>
+                </a>
+            </nav>
+
+            <div class="d-flex gap-2 align-items-center">
+                <a href="control-center.html#login" class="btn btn-secondary px-3">Sign In</a>
+                <a href="control-center.html#register" class="btn btn-accent px-3">Get Started</a>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero text-center mx-auto" style="max-width: 720px;">
+            <div class="hero-kicker">// transparent &amp; predictable pricing</div>
+            <h1 class="hero-title">Simple plans for <span class="accent">serious uptime.</span></h1>
+            <p class="hero-sub mx-auto">
+                Real-time ping checks, keyword verification, and SSL monitoring.
+                Pick the tier that matches your infrastructure, upgrade or cancel anytime.
+            </p>
+
+            <!-- Billing Cycle Switcher -->
+            <div class="mt-4 pt-2 d-inline-flex flex-column align-items-center">
+                <div class="pricing-switch-container">
+                    <button type="button" id="bill-monthly-btn" class="pricing-switch-btn active" onclick="setBilling('monthly')">
+                        Monthly
+                    </button>
+                    <button type="button" id="bill-yearly-btn" class="pricing-switch-btn" onclick="setBilling('yearly')">
+                        Yearly
+                        <span class="tag save">Save 20%</span>
+                    </button>
+                </div>
+                <span id="billing-summary-hint" class="text-secondary mt-2" style="font-family: var(--font-mono); font-size: 0.75rem;">
+                    Switch to annual billing to get 2 months free
+                </span>
+            </div>
+        </section>
+
+        <!-- Pricing Cards -->
+        <div class="row g-4 mt-1">
+            <!-- Hobby Plan -->
+            <div class="col-lg-4 col-md-6">
+                <div class="panel pricing-card">
+                    <div class="pricing-header">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h2 class="pricing-plan-name">Hobby</h2>
+                            <span class="tag">Free</span>
+                        </div>
+                        <p class="pricing-plan-desc">For side projects, blogs, and developers testing the waters.</p>
+                    </div>
+
+                    <div class="pricing-price-wrap">
+                        <span class="pricing-currency">$</span>
+                        <span class="pricing-amount">0</span>
+                        <span class="pricing-period">/ month</span>
+                    </div>
+                    <div class="pricing-billing-subtext">Free forever • No credit card needed</div>
+
+                    <a href="control-center.html#register" class="btn btn-secondary w-100 py-2 mb-3">Start for Free</a>
+
+                    <div class="pricing-divider"></div>
+
+                    <ul class="pricing-features">
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span><strong class="pricing-feature-highlight">5</strong> monitored URLs</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span><strong class="pricing-feature-highlight">5-minute</strong> check frequency</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>SSL certificate expiry tracking</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Response time latency charts</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Email downtime notifications</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>24-hour activity log retention</span>
+                        </li>
+                        <li class="pricing-feature-item muted">
+                            <span class="feat-icon cross">—</span>
+                            <span>Keyword content verification</span>
+                        </li>
+                        <li class="pricing-feature-item muted">
+                            <span class="feat-icon cross">—</span>
+                            <span>Discord alerts &amp; custom webhooks</span>
+                        </li>
+                        <li class="pricing-feature-item muted">
+                            <span class="feat-icon cross">—</span>
+                            <span>Sub-minute check intervals</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Pro Plan (Featured) -->
+            <div class="col-lg-4 col-md-6">
+                <div class="panel pricing-card featured">
+                    <span class="pricing-card-badge">Most Popular</span>
+
+                    <div class="pricing-header">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h2 class="pricing-plan-name text-light">Pro</h2>
+                            <span class="tag popular">Fast Checks</span>
+                        </div>
+                        <p class="pricing-plan-desc">For production web apps, e-commerce, and fast-growing startups.</p>
+                    </div>
+
+                    <div class="pricing-price-wrap">
+                        <span class="pricing-currency">$</span>
+                        <span class="pricing-amount" id="pro-price">19</span>
+                        <span class="pricing-period">/ month</span>
+                    </div>
+                    <div class="pricing-billing-subtext" id="pro-billing-sub">Billed monthly ($19/mo)</div>
+
+                    <a href="control-center.html#register" class="btn btn-accent w-100 py-2 mb-3">
+                        Start 14-Day Pro Trial
+                    </a>
+
+                    <div class="pricing-divider"></div>
+
+                    <ul class="pricing-features">
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span><strong class="pricing-feature-highlight">50</strong> monitored URLs</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span><strong class="pricing-feature-highlight">1-minute</strong> check frequency</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span><strong class="pricing-feature-highlight">Keyword</strong> search validation</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Response latency &amp; uptime history (90d)</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Proactive SSL alerts (30 &amp; 7 days out)</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Instant <strong class="pricing-feature-highlight">Discord</strong> &amp; Webhook alerts</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Pause &amp; resume individual monitors</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Export logs to <span style="font-family: var(--font-mono);">.txt</span> files</span>
+                        </li>
+                        <li class="pricing-feature-item muted">
+                            <span class="feat-icon cross">—</span>
+                            <span>Multi-seat team members</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Business Plan -->
+            <div class="col-lg-4 col-md-12">
+                <div class="panel pricing-card">
+                    <div class="pricing-header">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h2 class="pricing-plan-name">Business</h2>
+                            <span class="tag">Scale</span>
+                        </div>
+                        <p class="pricing-plan-desc">For digital agencies, platforms, and teams requiring SLA precision.</p>
+                    </div>
+
+                    <div class="pricing-price-wrap">
+                        <span class="pricing-currency">$</span>
+                        <span class="pricing-amount" id="biz-price">59</span>
+                        <span class="pricing-period">/ month</span>
+                    </div>
+                    <div class="pricing-billing-subtext" id="biz-billing-sub">Billed monthly ($59/mo)</div>
+
+                    <a href="control-center.html#register" class="btn btn-secondary w-100 py-2 mb-3">Upgrade to Business</a>
+
+                    <div class="pricing-divider"></div>
+
+                    <ul class="pricing-features">
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span><strong class="pricing-feature-highlight">250</strong> monitored URLs</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span><strong class="pricing-feature-highlight">30-second</strong> check frequency</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Multi-location global health checks</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Keyword &amp; status regex matching</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Discord, Slack, SMS &amp; Webhook routing</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Full REST API with high rate limits</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>1-year log retention &amp; SLA export</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Up to 10 team member seats</span>
+                        </li>
+                        <li class="pricing-feature-item">
+                            <span class="feat-icon check">✓</span>
+                            <span>Priority 24/7 technical support</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Capacity & Frequency Calculator -->
+        <div class="panel my-5">
+            <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
+                <h2 class="panel-title m-0">
+                    <span>⚡ Monitoring Capacity Calculator</span>
+                </h2>
+                <span class="count">// dynamic estimates</span>
+            </div>
+            <p class="text-secondary" style="font-size: 0.85rem;">
+                Adjust the sliders to simulate your monitoring volume and find your ideal Cheetah Uptime configuration.
+            </p>
+
+            <div class="row g-4 mt-1 align-items-center">
+                <div class="col-md-7">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="calc-monitors-slider" class="m-0">Number of URLs to monitor</label>
+                            <span id="calc-monitors-val" class="text-light fw-bold" style="font-family: var(--font-mono);">15 URLs</span>
+                        </div>
+                        <input type="range" class="range-slider-custom" id="calc-monitors-slider" min="1" max="300" value="15" oninput="updateCalculator()">
+                        <div class="d-flex justify-content-between text-secondary mt-1" style="font-family: var(--font-mono); font-size: 0.7rem;">
+                            <span>1 URL</span>
+                            <span>50 URLs</span>
+                            <span>150 URLs</span>
+                            <span>300 URLs</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-2">Desired check interval</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-secondary calc-interval-btn active" data-interval="1" onclick="setIntervalChoice(1)">
+                                1 Minute
+                            </button>
+                            <button type="button" class="btn btn-secondary calc-interval-btn" data-interval="5" onclick="setIntervalChoice(5)">
+                                5 Minutes
+                            </button>
+                            <button type="button" class="btn btn-secondary calc-interval-btn" data-interval="0.5" onclick="setIntervalChoice(0.5)">
+                                30 Seconds
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="p-3 rounded" style="background: var(--surface-raised); border: 1px solid var(--border);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-secondary" style="font-size: 0.75rem;">ESTIMATED CHECKS</span>
+                            <span class="tag live" id="calc-checks-month">648,000 / mo</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-secondary" style="font-size: 0.75rem;">DETECTION TIME</span>
+                            <span class="text-light" style="font-family: var(--font-mono); font-size: 0.85rem;" id="calc-detection">&le; 60 seconds</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-secondary" style="font-size: 0.75rem;">RECOMMENDED TIER</span>
+                            <span class="tag popular" id="calc-tier-badge">Pro Plan</span>
+                        </div>
+                        <a href="control-center.html#register" id="calc-cta-btn" class="btn btn-accent w-100 py-2">
+                            Deploy with Pro
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Feature Comparison Table -->
+        <div class="panel my-5">
+            <div class="d-flex justify-content-between align-items-baseline mb-3">
+                <h2 class="panel-title m-0">Detailed Feature Comparison</h2>
+                <span class="count">// full breakdown</span>
+            </div>
+
+            <div class="pricing-table-container">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Feature</th>
+                            <th class="col-plan" style="width: 20%;">Hobby</th>
+                            <th class="col-plan featured-col" style="width: 20%;">Pro</th>
+                            <th class="col-plan" style="width: 20%;">Business</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Core Monitoring -->
+                        <tr class="table-category-row">
+                            <td colspan="4">Core Monitoring Specs</td>
+                        </tr>
+                        <tr>
+                            <td>Monitored targets</td>
+                            <td class="col-plan">5 URLs</td>
+                            <td class="col-plan featured-col"><strong class="pricing-feature-highlight">50 URLs</strong></td>
+                            <td class="col-plan">250 URLs</td>
+                        </tr>
+                        <tr>
+                            <td>Fastest check interval</td>
+                            <td class="col-plan">5 minutes</td>
+                            <td class="col-plan featured-col"><strong class="pricing-feature-highlight">1 minute</strong></td>
+                            <td class="col-plan">30 seconds</td>
+                        </tr>
+                        <tr>
+                            <td>Response latency &amp; chart tracking</td>
+                            <td class="col-plan text-success">✓</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Keyword string verification</td>
+                            <td class="col-plan text-secondary">—</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Pause &amp; resume individual monitors</td>
+                            <td class="col-plan text-success">✓</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Manual "Check Now" triggering</td>
+                            <td class="col-plan text-success">✓</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+
+                        <!-- SSL & Security -->
+                        <tr class="table-category-row">
+                            <td colspan="4">SSL &amp; Security Monitoring</td>
+                        </tr>
+                        <tr>
+                            <td>SSL Certificate validity checks</td>
+                            <td class="col-plan text-success">✓</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+                        <tr>
+                            <td>SSL Expiry notification window</td>
+                            <td class="col-plan">7 days before</td>
+                            <td class="col-plan featured-col"><strong class="pricing-feature-highlight">30 &amp; 7 days</strong></td>
+                            <td class="col-plan">Customizable</td>
+                        </tr>
+                        <tr>
+                            <td>Mixed-content &amp; handshake errors</td>
+                            <td class="col-plan text-secondary">—</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+
+                        <!-- Notifications & Integrations -->
+                        <tr class="table-category-row">
+                            <td colspan="4">Alerts &amp; Channels</td>
+                        </tr>
+                        <tr>
+                            <td>Email downtime notifications</td>
+                            <td class="col-plan text-success">✓</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Discord Webhook integration</td>
+                            <td class="col-plan text-secondary">—</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Custom HTTP Webhooks</td>
+                            <td class="col-plan text-secondary">—</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+                        <tr>
+                            <td>SMS &amp; Phone call alerts</td>
+                            <td class="col-plan text-secondary">—</td>
+                            <td class="col-plan featured-col text-secondary">—</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+
+                        <!-- Data & Governance -->
+                        <tr class="table-category-row">
+                            <td colspan="4">Data, Logs &amp; Team</td>
+                        </tr>
+                        <tr>
+                            <td>Activity history retention</td>
+                            <td class="col-plan">24 hours</td>
+                            <td class="col-plan featured-col">90 days</td>
+                            <td class="col-plan">1 full year</td>
+                        </tr>
+                        <tr>
+                            <td>Save logs as .txt</td>
+                            <td class="col-plan text-success">✓</td>
+                            <td class="col-plan featured-col text-success">✓</td>
+                            <td class="col-plan text-success">✓</td>
+                        </tr>
+                        <tr>
+                            <td>REST API Access (Token Bearer)</td>
+                            <td class="col-plan text-success">Basic</td>
+                            <td class="col-plan featured-col">Standard (60 req/min)</td>
+                            <td class="col-plan">High Volume (500 req/min)</td>
+                        </tr>
+                        <tr>
+                            <td>Team member seats</td>
+                            <td class="col-plan">1 user</td>
+                            <td class="col-plan featured-col">1 user</td>
+                            <td class="col-plan"><strong class="pricing-feature-highlight">Up to 10 seats</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Support SLA</td>
+                            <td class="col-plan">Community</td>
+                            <td class="col-plan featured-col">Email (under 8 hrs)</td>
+                            <td class="col-plan">24/7 Priority Support</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Frequently Asked Questions (FAQ) -->
+        <div class="panel my-5">
+            <div class="d-flex justify-content-between align-items-baseline mb-3">
+                <h2 class="panel-title m-0">Frequently Asked Questions</h2>
+                <span class="count">// answers &amp; details</span>
+            </div>
+
+            <div class="faq-container">
+                <div class="faq-card">
+                    <button class="faq-btn" type="button" data-bs-toggle="collapse" data-bs-target="#faq-1" aria-expanded="true">
+                        <span>How fast does Cheetah Uptime notify me when a site goes down?</span>
+                        <span class="faq-arrow">›</span>
+                    </button>
+                    <div id="faq-1" class="collapse show">
+                        <div class="faq-body">
+                            Checks are dispatched continuously based on your plan interval (down to 30 seconds on Business or 1 minute on Pro).
+                            The moment an HTTP request returns an error code (4xx, 5xx), a connection timeout, or a missing keyword, an alert is queued immediately through your configured channels (Email, Discord webhook, or custom webhook).
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card">
+                    <button class="faq-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-2" aria-expanded="false">
+                        <span>How does keyword verification work?</span>
+                        <span class="faq-arrow">›</span>
+                    </button>
+                    <div id="faq-2" class="collapse">
+                        <div class="faq-body">
+                            Sometimes a web server returns an HTTP 200 OK status code even when an application crashed (e.g., a database connection error page or maintenance screen).
+                            By providing a keyword like "Welcome" or "Add to Cart", Cheetah Uptime scans the response body to ensure your real application is actively rendering. If the string is missing, it marks the monitor as down.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card">
+                    <button class="faq-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-3" aria-expanded="false">
+                        <span>Can I change or cancel my plan at any time?</span>
+                        <span class="faq-arrow">›</span>
+                    </button>
+                    <div id="faq-3" class="collapse">
+                        <div class="faq-body">
+                            Yes, absolutely. There are no contracts or commitments. You can upgrade, downgrade, or cancel directly from your account settings.
+                            If you cancel an annual plan, you will retain access for the duration of the prepaid period.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card">
+                    <button class="faq-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-4" aria-expanded="false">
+                        <span>How does SSL certificate expiration monitoring work?</span>
+                        <span class="faq-arrow">›</span>
+                    </button>
+                    <div id="faq-4" class="collapse">
+                        <div class="faq-body">
+                            Whenever Cheetah Uptime inspects an HTTPS URL, it parses the remote TLS certificate metadata, verifying the issuer, validity period, and remaining days.
+                            You will receive early warnings 30 days and 7 days prior to certificate expiry, protecting your users from browser warning roadblocks.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card">
+                    <button class="faq-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-5" aria-expanded="false">
+                        <span>Can I test Cheetah Uptime without creating an account?</span>
+                        <span class="faq-arrow">›</span>
+                    </button>
+                    <div id="faq-5" class="collapse">
+                        <div class="faq-body">
+                            Yes! Visit our <a href="test.html" class="text-accent text-decoration-none">Try Once</a> tool to run an immediate, live diagnostic check on any domain without signing up or saving credentials.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom CTA Card -->
+        <div class="panel p-4 p-md-5 my-5 text-center" style="background: linear-gradient(180deg, var(--surface-raised) 0%, var(--surface) 100%); border-color: var(--border);">
+            <div class="hero-kicker">// zero downtime surprises</div>
+            <h2 class="hero-title mb-2">Ready to keep your sites <span class="accent">fast &amp; alive?</span></h2>
+            <p class="hero-sub mx-auto mb-4" style="max-width: 500px;">
+                Join developers and operators relying on Cheetah Uptime. Set up your first monitor in under 60 seconds.
+            </p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="control-center.html#register" class="btn btn-accent px-4 py-2">
+                    Create Free Account
+                </a>
+                <a href="test.html" class="btn btn-secondary px-4 py-2">
+                    Run a Quick Test
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer-bar">
+            <div class="d-flex align-items-center gap-3">
+                <span class="fw-semibold text-light">Cheetah Uptime</span>
+                <span>•</span>
+                <a href="index.html">Menu</a>
+                <a href="control-center.html">Dashboard</a>
+                <a href="test.html">Try Once</a>
+                <a href="pricing.html">Pricing</a>
+            </div>
+            <div>
+                <span>stay fast. stay up.</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Interactive script for Billing Toggle & Calculator -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentBilling = 'monthly';
+        let currentInterval = 1; // in minutes
+
+        const PRICING = {
+            pro: { monthly: 19, yearly: 15 },
+            biz: { monthly: 59, yearly: 47 }
+        };
+
+        function setBilling(cycle) {
+            currentBilling = cycle;
+            const monthlyBtn = document.getElementById('bill-monthly-btn');
+            const yearlyBtn = document.getElementById('bill-yearly-btn');
+            const summaryHint = document.getElementById('billing-summary-hint');
+
+            const proPriceEl = document.getElementById('pro-price');
+            const proSubEl = document.getElementById('pro-billing-sub');
+
+            const bizPriceEl = document.getElementById('biz-price');
+            const bizSubEl = document.getElementById('biz-billing-sub');
+
+            if (cycle === 'yearly') {
+                monthlyBtn.classList.remove('active');
+                yearlyBtn.classList.add('active');
+                summaryHint.textContent = 'Billed annually — 20% discount applied';
+
+                proPriceEl.textContent = PRICING.pro.yearly;
+                proSubEl.textContent = 'Billed annually ($180/yr) — Save $48';
+
+                bizPriceEl.textContent = PRICING.biz.yearly;
+                bizSubEl.textContent = 'Billed annually ($564/yr) — Save $144';
+            } else {
+                yearlyBtn.classList.remove('active');
+                monthlyBtn.classList.add('active');
+                summaryHint.textContent = 'Switch to annual billing to get 2 months free';
+
+                proPriceEl.textContent = PRICING.pro.monthly;
+                proSubEl.textContent = 'Billed monthly ($19/mo)';
+
+                bizPriceEl.textContent = PRICING.biz.monthly;
+                bizSubEl.textContent = 'Billed monthly ($59/mo)';
+            }
+        }
+
+        function setIntervalChoice(interval) {
+            currentInterval = interval;
+            document.querySelectorAll('.calc-interval-btn').forEach(btn => {
+                const val = parseFloat(btn.dataset.interval);
+                if (val === interval) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            updateCalculator();
+        }
+
+        function updateCalculator() {
+            const slider = document.getElementById('calc-monitors-slider');
+            const monitorsValEl = document.getElementById('calc-monitors-val');
+            const checksMonthEl = document.getElementById('calc-checks-month');
+            const detectionEl = document.getElementById('calc-detection');
+            const tierBadgeEl = document.getElementById('calc-tier-badge');
+            const ctaBtn = document.getElementById('calc-cta-btn');
+
+            const monitors = parseInt(slider.value, 10);
+            monitorsValEl.textContent = `${monitors} URL${monitors > 1 ? 's' : ''}`;
+
+            // Calculation: 30 days * 24 hours * 60 minutes = 43,200 minutes/month
+            const minutesPerMonth = 43200;
+            const checksPerMonth = Math.round(monitors * (minutesPerMonth / currentInterval));
+            checksMonthEl.textContent = checksPerMonth.toLocaleString() + ' / mo';
+
+            // Detection time
+            if (currentInterval <= 0.5) {
+                detectionEl.textContent = '≤ 30 seconds';
+            } else if (currentInterval === 1) {
+                detectionEl.textContent = '≤ 60 seconds';
+            } else {
+                detectionEl.textContent = '≤ 5 minutes';
+            }
+
+            // Recommend Tier based on monitors & interval
+            if (monitors <= 5 && currentInterval >= 5) {
+                tierBadgeEl.className = 'tag';
+                tierBadgeEl.textContent = 'Hobby (Free)';
+                ctaBtn.textContent = 'Start Free with Hobby';
+                ctaBtn.className = 'btn btn-secondary w-100 py-2';
+            } else if (monitors <= 50 && currentInterval >= 1) {
+                tierBadgeEl.className = 'tag popular';
+                tierBadgeEl.textContent = 'Pro Plan ($19/mo)';
+                ctaBtn.textContent = 'Deploy with Pro';
+                ctaBtn.className = 'btn btn-accent w-100 py-2';
+            } else {
+                tierBadgeEl.className = 'tag save';
+                tierBadgeEl.textContent = 'Business Plan ($59/mo)';
+                ctaBtn.textContent = 'Scale with Business';
+                ctaBtn.className = 'btn btn-secondary w-100 py-2';
+            }
+        }
+
+        // Initialize calculator on page load
+        updateCalculator();
+    </script>
+</body>
+</html>

@@ -10,10 +10,10 @@
     <body class="bg-dark text-light d-flex p-4 p-lg-5 justify-content-lg-center min-vh-100 flex-column">
         <div id="main" class="container w-100" style="max-width: 1000px;">
             <div class="app-header">
-                <p class="app-title">
+                <a href="index.html" class="app-title text-decoration-none">
                     <span id="pulse-dot" class="pulse-dot is-idle"></span>
-                    Uptime
-                </p>
+                    Cheetah Uptime
+                </a>
                 <div class="header-stats">
                     <div class="stat">
                         <span id="stat-up" class="stat-value up">0</span>
@@ -28,9 +28,10 @@
                         <span class="stat-label">watched</span>
                     </div>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                    <a href="pricing.html" class="btn btn-secondary px-3">Pricing</a>
                     <button id="login-modal-btn" class="btn btn-secondary px-3" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
-                    <button id="register-modal-btn" class="btn btn-secondary px-3" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
+                    <button id="register-modal-btn" class="btn btn-accent px-3" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
                     <button id="logout-btn" class="btn btn-outline-danger px-3 d-none">Logout</button>
                 </div>
             </div>
@@ -83,6 +84,20 @@
                             <canvas id="stats-chart" height="140"></canvas>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="footer-bar">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="fw-semibold text-light">Cheetah Uptime</span>
+                    <span>•</span>
+                    <a href="index.html">Menu</a>
+                    <a href="control-center.html">Dashboard</a>
+                    <a href="test.html">Try Once</a>
+                    <a href="pricing.html">Pricing</a>
+                </div>
+                <div>
+                    <span>stay fast. stay up.</span>
                 </div>
             </div>
         </div>
