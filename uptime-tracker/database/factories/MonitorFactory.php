@@ -9,6 +9,7 @@ class MonitorFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'name' => fake()->domainName(),
             'url' => 'https://' . fake()->domainName(),
             'check_interval' => 60,

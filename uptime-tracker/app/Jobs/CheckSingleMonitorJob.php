@@ -23,6 +23,8 @@ class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
     // Same monitor can't be queued twice within 60 seconds
     public int $uniqueFor = 60;
 
+    public int $retryDelaySeconds = 2;
+
     public function __construct(public Monitor $monitor)
     {
     }
@@ -36,25 +38,15 @@ class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
     {
         $monitor = $this->monitor;
         $oldState = $monitor->status;
-        $startTime = microtime(true);
 
-        $statusCode = null;
-        $isUp = false;
+        [$isUp, $statusCode, $responseTime] = $this->check($monitor);
 
-        try {
-            $response = Http::timeout(10)->get($monitor->url);
-            $statusCode = $response->status();
-            $isUp = $response->successful();
-
-            if ($isUp && $monitor->keyword) {
-                $isUp = !str_contains($response->body(), $monitor->keyword);
-            }
-        } catch (\Throwable $th) {
-            $statusCode = null;
-            $isUp = false;
+        // False-Positive Protection: If the request fails or times out,
+        // wait 2 seconds and perform a secondary verification check before marking as down.
+        if (! $isUp) {
+            sleep($this->retryDelaySeconds);
+            [$isUp, $statusCode, $responseTime] = $this->check($monitor);
         }
-
-        $responseTime = (int) round((microtime(true) - $startTime) * 1000);
 
         $currentState = 'down';
         if ($isUp) {
@@ -84,6 +76,30 @@ class CheckSingleMonitorJob implements ShouldQueue, ShouldBeUnique
             'status_code' => $statusCode,
             'response_time_ms' => $responseTime,
         ]);
+    }
+
+    protected function check(Monitor $monitor): array
+    {
+        $startTime = microtime(true);
+        $statusCode = null;
+        $isUp = false;
+
+        try {
+            $response = Http::timeout(10)->get($monitor->url);
+            $statusCode = $response->status();
+            $isUp = $response->successful();
+
+            if ($isUp && $monitor->keyword) {
+                $isUp = !str_contains($response->body(), $monitor->keyword);
+            }
+        } catch (\Throwable $th) {
+            $statusCode = null;
+            $isUp = false;
+        }
+
+        $responseTime = (int) round((microtime(true) - $startTime) * 1000);
+
+        return [$isUp, $statusCode, $responseTime];
     }
 
     private function notify(string $message): void

@@ -21,7 +21,7 @@ class MonitorFeatureTest extends TestCase
 
     public function test_can_pause_monitor()
     {
-        $monitor = Monitor::factory()->create(['is_paused' => false]);
+        $monitor = Monitor::factory()->create(['user_id' => $this->user->id, 'is_paused' => false]);
 
         $response = $this->actingAs($this->user, 'sanctum')->postJson("/api/monitors/{$monitor->id}/pause");
 
@@ -31,7 +31,7 @@ class MonitorFeatureTest extends TestCase
 
     public function test_can_resume_monitor()
     {
-        $monitor = Monitor::factory()->create(['is_paused' => true]);
+        $monitor = Monitor::factory()->create(['user_id' => $this->user->id, 'is_paused' => true]);
 
         $response = $this->actingAs($this->user, 'sanctum')->postJson("/api/monitors/{$monitor->id}/resume");
 
