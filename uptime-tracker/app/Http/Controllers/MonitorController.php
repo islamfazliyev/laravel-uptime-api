@@ -27,7 +27,7 @@ class MonitorController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $monitor = Monitor::where('user_id', $request->user()->id)->findOrFail($id);
+        $monitor = $request->user()->monitors()->findOrFail($id);
         $monitor->delete();
 
         return response()->json(['message' => 'Monitor Deleted'], 200);
@@ -35,7 +35,7 @@ class MonitorController extends Controller
 
     public function pause(Request $request, Monitor $monitor)
     {
-        if ($monitor->user_id !== $request->user()->id) {
+        if (! $request->user()->monitors()->where('id', $monitor->id)->exists()) {
             abort(403);
         }
         $monitor->update(['is_paused' => true]);
@@ -44,7 +44,7 @@ class MonitorController extends Controller
 
     public function resume(Request $request, Monitor $monitor)
     {
-        if ($monitor->user_id !== $request->user()->id) {
+        if (! $request->user()->monitors()->where('id', $monitor->id)->exists()) {
             abort(403);
         }
         $monitor->update(['is_paused' => false]);
@@ -66,9 +66,20 @@ class MonitorController extends Controller
         ], 202);
     }
 
+    public function checkSingle(Request $request, $id)
+    {
+        $monitor = $request->user()->monitors()->findOrFail($id);
+        CheckSingleMonitorJob::dispatch($monitor);
+
+        return response()->json([
+            'message' => 'Check queued',
+            'monitor_id' => $monitor->id,
+        ], 202);
+    }
+
     public function stats(Request $request, $id)
     {
-        $monitor = Monitor::where('user_id', $request->user()->id)->findOrFail($id);
+        $monitor = $request->user()->monitors()->findOrFail($id);
 
         $since = now()->subDay();
 
@@ -90,5 +101,18 @@ class MonitorController extends Controller
             'total_checks_24h' => $total,
             'recent' => $recent,
         ]);
+    }
+
+    public function logs(Request $request)
+    {
+        $monitorIds = $request->user()->monitors()->pluck('id');
+
+        $logs = \App\Models\Ping::whereIn('monitor_id', $monitorIds)
+            ->with('monitor:id,name,url')
+            ->latest()
+            ->take(100)
+            ->get();
+
+        return response()->json($logs);
     }
 }

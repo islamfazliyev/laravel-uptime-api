@@ -22,6 +22,8 @@ class CheckSingleMonitorJobTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        putenv('DISCORD_ALERT_WEBHOOK');
+        unset($_ENV['DISCORD_ALERT_WEBHOOK'], $_SERVER['DISCORD_ALERT_WEBHOOK']);
         $this->user = User::factory()->create();
     }
 
@@ -110,7 +112,7 @@ class CheckSingleMonitorJobTest extends TestCase
         Notification::assertSentTo($monitor, UptimeAlert::class, function ($notification) {
             return $notification->isUp === false && $notification->statusCode === 503;
         });
-        Http::assertSentCount(2);
+        $this->assertCount(2, Http::recorded(fn ($request) => $request->url() === 'https://example.com'));
     }
 
     public function test_immediate_success_does_not_trigger_retry()

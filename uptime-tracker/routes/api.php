@@ -17,9 +17,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/monitors', [MonitorController::class, 'index']);
     Route::post('/monitors', [MonitorController::class, 'store']);
     Route::post('/monitors/check', [MonitorController::class, 'checkAll']);
+    Route::post('/monitors/{id}/check', [MonitorController::class, 'checkSingle']);
     Route::get('/monitors/{id}/stats', [MonitorController::class, 'stats']);
     Route::delete('/monitors/{id}', [MonitorController::class, 'destroy']);
 
     Route::post('/monitors/{monitor}/pause', [MonitorController::class, 'pause']);
     Route::post('/monitors/{monitor}/resume', [MonitorController::class, 'resume']);
+
+    Route::get('/logs', [MonitorController::class, 'logs']);
 });
