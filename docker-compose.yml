@@ -1,0 +1,101 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: uptime-api-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-uptime_tracker}
+      DB_USERNAME: ${DB_USERNAME:-uptime_user}
+      DB_PASSWORD: ${DB_PASSWORD:-uptime_secret}
+      QUEUE_CONNECTION: database
+    volumes:
+      - ./uptime-tracker:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - uptime-network
+
+  web:
+    image: nginx:alpine
+    container_name: uptime-api-web
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:80"
+    volumes:
+      - ./uptime-tracker:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - uptime-network
+
+  db:
+    image: mysql:8.0
+    container_name: uptime-api-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-uptime_tracker}
+      MYSQL_USER: ${DB_USERNAME:-uptime_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-uptime_secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
+    volumes:
+      - uptime-db-data:/var/lib/mysql
+    ports:
+      - "33066:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 5
+    networks:
+      - uptime-network
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: uptime-api-queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work --sleep=3 --tries=3
+    volumes:
+      - ./uptime-tracker:/var/www/html
+    depends_on:
+      - app
+      - db
+    networks:
+      - uptime-network
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: uptime-api-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan schedule:work
+    volumes:
+      - ./uptime-tracker:/var/www/html
+    depends_on:
+      - app
+      - db
+    networks:
+      - uptime-network
+
+networks:
+  uptime-network:
+    driver: bridge
+
+volumes:
+  uptime-db-data:
+    driver: local

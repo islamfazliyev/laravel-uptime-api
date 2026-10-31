@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+uptime-frontend
+uptime-tracker/vendor
+uptime-tracker/storage/logs/*
+uptime-tracker/storage/framework/cache/*
+uptime-tracker/storage/framework/sessions/*
+uptime-tracker/storage/framework/views/*
+uptime-tracker/.phpunit.result.cache
+uptime-tracker/.env
+*.zip
