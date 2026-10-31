@@ -16,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/monitors', [MonitorController::class, 'index']);
     Route::post('/monitors', [MonitorController::class, 'store']);
+    Route::put('/monitors/{id}', [MonitorController::class, 'update']);
+    Route::patch('/monitors/{id}', [MonitorController::class, 'update']);
     Route::post('/monitors/check', [MonitorController::class, 'checkAll']);
     Route::post('/monitors/{id}/check', [MonitorController::class, 'checkSingle']);
     Route::get('/monitors/{id}/stats', [MonitorController::class, 'stats']);

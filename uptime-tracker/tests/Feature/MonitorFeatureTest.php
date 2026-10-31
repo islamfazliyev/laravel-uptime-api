@@ -153,4 +153,24 @@ class MonitorFeatureTest extends TestCase
 
         $this->assertDatabaseMissing('monitors', ['id' => $monitor->id]);
     }
+
+    public function test_user_can_update_monitor()
+    {
+        $monitor = Monitor::factory()->create([
+            'user_id' => $this->user->id,
+            'name' => 'Original Name',
+            'url' => 'https://original.com',
+        ]);
+
+        $response = $this->actingAs($this->user, 'sanctum')->putJson("/api/monitors/{$monitor->id}", [
+            'name' => 'Updated Name',
+            'url' => 'https://updated.com',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson(['message' => 'Monitor updated successfully']);
+
+        $this->assertEquals('Updated Name', $monitor->fresh()->name);
+        $this->assertEquals('https://updated.com', $monitor->fresh()->url);
+    }
 }

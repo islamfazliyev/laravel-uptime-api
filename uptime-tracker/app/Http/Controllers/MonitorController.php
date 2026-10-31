@@ -28,6 +28,24 @@ class MonitorController extends Controller
         return response()->json(['message' => 'Monitor eklendi', 'monitor' => $monitor], 201);
     }
 
+    public function update(Request $request, $id)
+    {
+        $monitor = $request->user()->monitors()->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'url' => 'sometimes|required|url|max:255',
+            'check_interval' => 'sometimes|required|integer|min:1',
+            'max_response_time_ms' => 'sometimes|required|integer|min:10',
+            'keyword' => 'nullable|string|max:255',
+            'certificate_check_enabled' => 'nullable|boolean',
+        ]);
+
+        $monitor->update($validated);
+
+        return response()->json(['message' => 'Monitor updated successfully', 'monitor' => $monitor]);
+    }
+
     public function destroy(Request $request, $id)
     {
         $monitor = $request->user()->monitors()->findOrFail($id);
