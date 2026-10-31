@@ -21,3 +21,8 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+
+# Archive files
+*.zip
+*.tar.gz
+*.tar.bz2
