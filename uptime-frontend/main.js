@@ -208,7 +208,11 @@ async function fetchMonitors() {
 
         monitors.forEach(monitor => {
             const li = document.createElement('li');
-            li.className = 'list-group-item bg-dark text-light d-flex justify-content-between align-items-center border-secondary';
+            li.className = 'list-group-item bg-dark text-light d-flex justify-content-between align-items-center border-secondary monitor-item';
+            const statusUpper = (monitor.status || 'PENDING').toUpperCase();
+            li.dataset.status = statusUpper;
+            li.dataset.url = (monitor.url || '').toLowerCase();
+            li.dataset.name = (monitor.name || '').toLowerCase();
 
             const span = document.createElement('span');
             span.className = 'text-truncate';
@@ -246,11 +250,21 @@ async function fetchMonitors() {
             if (monitor.status !== 'pending' && lastLoggedCheck[monitor.id] !== monitor.last_checked_at) {
                 lastLoggedCheck[monitor.id] = monitor.last_checked_at;
                 const time = monitor.last_checked_at ? new Date(monitor.last_checked_at).toLocaleTimeString() : '';
-                const color = monitor.status === 'up' ? 'text-success' : 'text-danger';
-                const logEntry = `<div><span class="text-secondary">[${time}]</span> <span class="${color}">[${monitor.status.toUpperCase()}]</span> <span>${escapeHtml(monitor.name)}</span> </div>`;
+                let color = 'text-success';
+                if (statusUpper === 'DOWN') {
+                    color = 'text-danger';
+                } else if (statusUpper === 'DEGRADED') {
+                    color = 'text-warning';
+                }
+                const nameEscaped = escapeHtml(monitor.name || monitor.url);
+                const urlEscaped = escapeHtml(monitor.url || '');
+                const logEntry = `<div class="log-item" data-status="${statusUpper}" data-name="${nameEscaped.toLowerCase()}" data-url="${urlEscaped.toLowerCase()}"><span class="text-secondary">[${time}]</span> <span class="${color}">[${statusUpper}]</span> <span>${nameEscaped}</span></div>`;
                 logContainer.insertAdjacentHTML('afterbegin', logEntry);
             }
         });
+
+        applyUrlFilters();
+        applyLogFilters();
     } catch (error) {
         console.error('Fetch error:', error);
     }
@@ -414,7 +428,13 @@ clearLogBtn.addEventListener('click', () => {
 });
 
 saveLogBtn.addEventListener('click', () => {
-    const spans = logContainer.querySelectorAll("span");
+    const visibleItems = logContainer.querySelectorAll(".log-item:not(.d-none)");
+    let spans;
+    if (visibleItems.length > 0) {
+        spans = Array.from(visibleItems).flatMap(item => Array.from(item.querySelectorAll("span")));
+    } else {
+        spans = Array.from(logContainer.querySelectorAll("div:not(.d-none) span, span"));
+    }
 
     const textContent = Array.from(spans)
         .map(span => span.textContent.trim())
@@ -434,6 +454,88 @@ saveLogBtn.addEventListener('click', () => {
     URL.revokeObjectURL(link.href);
 
 });
+
+// ---------- Client-Side Filtering (Logs & Monitors) ----------
+
+function applyLogFilters() {
+    const searchInput = document.getElementById('log-search-input');
+    const statusSelect = document.getElementById('log-status-filter');
+    if (!searchInput || !statusSelect || !logContainer) return;
+
+    const query = searchInput.value.trim().toLowerCase();
+    const filterStatus = statusSelect.value.toUpperCase();
+
+    const logItems = logContainer.querySelectorAll('.log-item');
+    logItems.forEach(item => {
+        const itemStatus = (item.dataset.status || '').toUpperCase();
+        const text = item.textContent.toLowerCase();
+        const nameAttr = item.dataset.name || '';
+        const urlAttr = item.dataset.url || '';
+
+        const matchesStatus = (filterStatus === 'ALL') || (itemStatus === filterStatus);
+        const matchesQuery = !query || text.includes(query) || nameAttr.includes(query) || urlAttr.includes(query);
+
+        if (matchesStatus && matchesQuery) {
+            item.classList.remove('d-none');
+        } else {
+            item.classList.add('d-none');
+        }
+    });
+}
+
+function applyUrlFilters() {
+    const searchInput = document.getElementById('url-search-input');
+    const statusSelect = document.getElementById('url-status-filter');
+    if (!searchInput || !statusSelect || !urlList) return;
+
+    const query = searchInput.value.trim().toLowerCase();
+    const filterStatus = statusSelect.value.toUpperCase();
+
+    const monitorItems = urlList.querySelectorAll('.monitor-item');
+    monitorItems.forEach(item => {
+        const itemStatus = (item.dataset.status || '').toUpperCase();
+        const text = item.textContent.toLowerCase();
+        const nameAttr = item.dataset.name || '';
+        const urlAttr = item.dataset.url || '';
+
+        const matchesStatus = (filterStatus === 'ALL') || (itemStatus === filterStatus);
+        const matchesQuery = !query || text.includes(query) || nameAttr.includes(query) || urlAttr.includes(query);
+
+        if (matchesStatus && matchesQuery) {
+            item.classList.remove('d-none');
+        } else {
+            item.classList.add('d-none');
+        }
+    });
+}
+
+const logSearchInput = document.getElementById('log-search-input');
+const logStatusFilter = document.getElementById('log-status-filter');
+const resetLogFiltersBtn = document.getElementById('reset-log-filters-btn');
+
+if (logSearchInput) logSearchInput.addEventListener('input', applyLogFilters);
+if (logStatusFilter) logStatusFilter.addEventListener('change', applyLogFilters);
+if (resetLogFiltersBtn) {
+    resetLogFiltersBtn.addEventListener('click', () => {
+        if (logSearchInput) logSearchInput.value = '';
+        if (logStatusFilter) logStatusFilter.value = 'ALL';
+        applyLogFilters();
+    });
+}
+
+const urlSearchInput = document.getElementById('url-search-input');
+const urlStatusFilter = document.getElementById('url-status-filter');
+const resetUrlFiltersBtn = document.getElementById('reset-url-filters-btn');
+
+if (urlSearchInput) urlSearchInput.addEventListener('input', applyUrlFilters);
+if (urlStatusFilter) urlStatusFilter.addEventListener('change', applyUrlFilters);
+if (resetUrlFiltersBtn) {
+    resetUrlFiltersBtn.addEventListener('click', () => {
+        if (urlSearchInput) urlSearchInput.value = '';
+        if (urlStatusFilter) urlStatusFilter.value = 'ALL';
+        applyUrlFilters();
+    });
+}
 
 
 updateAuthUI();

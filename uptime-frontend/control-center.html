@@ -47,9 +47,25 @@
                         </div>
                     </div>
                     <div id="status" class="panel flex-grow-1">
-                        <h2 class="panel-title">Activity</h2>
-                        <button id="clear-log-btn" class="btn btn-secondary">Clear Logs</button>
-                        <button id="save-log-btn" class="btn btn-secondary">Save Logs</button>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h2 class="panel-title m-0">Activity</h2>
+                            <div class="d-flex gap-2">
+                                <button id="clear-log-btn" class="btn btn-secondary btn-sm">Clear Logs</button>
+                                <button id="save-log-btn" class="btn btn-secondary btn-sm">Save Logs</button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-2 flex-wrap">
+                            <input type="text" id="log-search-input" class="form-control flex-grow-1" placeholder="Search logs (URL, keyword...)" style="font-size: 0.78rem !important;">
+                            <select id="log-status-filter" class="form-select" style="width: auto; font-size: 0.78rem !important;">
+                                <option value="ALL">All Status</option>
+                                <option value="UP">UP</option>
+                                <option value="DOWN">DOWN</option>
+                                <option value="DEGRADED">DEGRADED</option>
+                            </select>
+                            <button id="reset-log-filters-btn" class="btn btn-secondary btn-sm" title="Clear Filters">Clear Filters</button>
+                        </div>
+
                         <div id="log-container" class="flex-grow-1 overflow-auto"></div>
                     </div>
                 </div>
@@ -65,7 +81,19 @@
                         </div>
                         <div id="timer-error-container"></div>
 
-                        <label>Watched urls <span class="text-secondary">(click one for stats)</span></label>
+                        <div class="d-flex justify-content-between align-items-baseline mb-1">
+                            <label class="m-0">Watched urls <span class="text-secondary">(click one for stats)</span></label>
+                        </div>
+                        <div class="d-flex gap-2 mb-2 flex-wrap">
+                            <input type="text" id="url-search-input" class="form-control flex-grow-1" placeholder="Search monitors..." style="font-size: 0.78rem !important;">
+                            <select id="url-status-filter" class="form-select" style="width: auto; font-size: 0.78rem !important;">
+                                <option value="ALL">All Status</option>
+                                <option value="UP">UP</option>
+                                <option value="DOWN">DOWN</option>
+                                <option value="DEGRADED">DEGRADED</option>
+                            </select>
+                            <button id="reset-url-filters-btn" class="btn btn-secondary btn-sm" title="Clear Filters">Clear Filters</button>
+                        </div>
                         <div id="urls">
                             <ul id="url-list" class="list-group list-group-flush overflow-auto" style="max-height: 250px;"></ul>
                         </div>
