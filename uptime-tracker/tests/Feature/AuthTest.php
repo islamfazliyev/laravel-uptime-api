@@ -58,4 +58,30 @@ class AuthTest extends TestCase
             'password' => 'wrong-password',
         ])->assertUnprocessable();
     }
+
+    public function test_authenticated_user_can_fetch_profile(): void
+    {
+        $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/user')
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $user->id,
+                'email' => 'jane@example.com',
+            ]);
+    }
+
+    public function test_authenticated_user_can_logout_and_revoke_token(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/logout')
+            ->assertOk()
+            ->assertJson(['message' => 'Logged Out']);
+
+        $this->assertCount(0, $user->fresh()->tokens);
+    }
 }

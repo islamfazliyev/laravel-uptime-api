@@ -322,4 +322,91 @@ class CheckSingleMonitorJobTest extends TestCase
         $this->assertEquals('down', $monitor->fresh()->status);
         Log::shouldHaveReceived('warning');
     }
+
+    public function test_monitor_transitions_to_degraded_when_response_time_exceeds_threshold()
+    {
+        putenv('DISCORD_ALERT_WEBHOOK=https://discord.com/api/webhooks/test-webhook');
+
+        $monitor = Monitor::factory()->create([
+            'user_id' => $this->user->id,
+            'url' => 'https://slow-site.test',
+            'status' => 'up',
+            'max_response_time_ms' => 10,
+        ]);
+
+        Http::fake([
+            'https://slow-site.test*' => function () {
+                usleep(25000);
+                return Http::response('OK', 200);
+            },
+            'https://discord.com/api/webhooks/*' => Http::response('OK', 200),
+        ]);
+
+        $job = new CheckSingleMonitorJob($monitor);
+        $job->handle();
+
+        $this->assertEquals('degraded', $monitor->fresh()->status);
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'discord.com/api/webhooks')
+                && str_contains($request['content'], 'DEGRADED PERFORMANCE');
+        });
+
+        putenv('DISCORD_ALERT_WEBHOOK');
+    }
+
+    public function test_monitor_transitions_from_down_to_up_with_resolved_notification()
+    {
+        Notification::fake();
+        putenv('DISCORD_ALERT_WEBHOOK=https://discord.com/api/webhooks/test-webhook');
+
+        $monitor = Monitor::factory()->create([
+            'user_id' => $this->user->id,
+            'url' => 'https://recovered-site.test',
+            'status' => 'down',
+            'max_response_time_ms' => 2000,
+        ]);
+
+        Http::fake([
+            'https://recovered-site.test*' => Http::response('OK', 200),
+            'https://discord.com/api/webhooks/*' => Http::response('OK', 200),
+        ]);
+
+        $job = new CheckSingleMonitorJob($monitor);
+        $job->handle();
+
+        $this->assertEquals('up', $monitor->fresh()->status);
+        Notification::assertSentTo($monitor, UptimeAlert::class, function ($notification) {
+            return $notification->isUp === true;
+        });
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'discord.com/api/webhooks')
+                && str_contains($request['content'], 'RESOLVED');
+        });
+
+        putenv('DISCORD_ALERT_WEBHOOK');
+    }
+
+    public function test_keyword_check_detects_maintenance_page_and_marks_down()
+    {
+        Notification::fake();
+
+        $monitor = Monitor::factory()->create([
+            'user_id' => $this->user->id,
+            'url' => 'https://keyword-site.test',
+            'keyword' => 'Under Maintenance',
+            'status' => 'up',
+            'max_response_time_ms' => 2000,
+        ]);
+
+        Http::fake([
+            'https://keyword-site.test*' => Http::response('<h1>Under Maintenance</h1>', 200),
+        ]);
+
+        $job = new CheckSingleMonitorJob($monitor);
+        $job->retryDelaySeconds = 0;
+        $job->handle();
+
+        $this->assertEquals('down', $monitor->fresh()->status);
+    }
 }
