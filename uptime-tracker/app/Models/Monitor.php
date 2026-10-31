@@ -43,6 +43,11 @@ class Monitor extends Model
         return $this->hasMany(Ping::class);
     }
 
+    public function latestPing(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Ping::class)->latestOfMany();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

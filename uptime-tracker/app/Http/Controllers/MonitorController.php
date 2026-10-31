@@ -11,7 +11,10 @@ class MonitorController extends Controller
 {
     public function index(Request $request)
     {
-        $monitors = $request->user()->monitors()->orderBy('last_checked_at', 'desc')->get();
+        $monitors = $request->user()->monitors()
+            ->with('latestPing')
+            ->orderBy('last_checked_at', 'desc')
+            ->get();
         return response()->json($monitors);
     }
 
