@@ -74,7 +74,12 @@ class CheckSslCertificateJob implements ShouldQueue, ShouldBeUnique
             $this->monitor->update([
                 'certificate_status' => 'invalid',
             ]);
-            // You could notify about invalid SSL here
+            \Illuminate\Support\Facades\Log::warning("SSL certificate inspection failed for monitor [{$this->monitor->id}] ({$this->monitor->url})", [
+                'monitor_id' => $this->monitor->id,
+                'url' => $this->monitor->url,
+                'error_type' => 'invalid_ssl_certificate',
+                'error_message' => $e->getMessage(),
+            ]);
         }
     }
 }

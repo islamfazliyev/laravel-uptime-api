@@ -9,6 +9,7 @@ use App\Notifications\UptimeAlert;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -201,5 +202,122 @@ class CheckSingleMonitorJobTest extends TestCase
         });
 
         putenv('DISCORD_ALERT_WEBHOOK');
+    }
+
+    public function test_default_http_timeout_is_five_seconds()
+    {
+        $monitor = Monitor::factory()->create(['user_id' => $this->user->id]);
+        $job = new CheckSingleMonitorJob($monitor);
+
+        $this->assertSame(5, $job->timeoutSeconds);
+    }
+
+    public function test_dns_resolution_failure_is_logged_with_structured_context()
+    {
+        Log::spy();
+
+        $monitor = Monitor::factory()->create([
+            'user_id' => $this->user->id,
+            'url' => 'https://non-existent-domain.test',
+            'status' => 'up',
+        ]);
+
+        Http::fake([
+            'https://non-existent-domain.test*' => function () {
+                throw new ConnectionException('cURL error 6: Could not resolve host: non-existent-domain.test');
+            },
+        ]);
+
+        $job = new CheckSingleMonitorJob($monitor);
+        $job->retryDelaySeconds = 0;
+        $job->handle();
+
+        Log::shouldHaveReceived('warning')
+            ->withArgs(function ($message, $context) use ($monitor) {
+                return str_contains($message, 'DNS resolution failure')
+                    && ($context['error_type'] ?? null) === 'dns_resolution_failure'
+                    && ($context['monitor_id'] ?? null) === $monitor->id;
+            });
+    }
+
+    public function test_ssl_failure_is_logged_with_structured_context()
+    {
+        Log::spy();
+
+        $monitor = Monitor::factory()->create([
+            'user_id' => $this->user->id,
+            'url' => 'https://expired-ssl.test',
+            'status' => 'up',
+        ]);
+
+        Http::fake([
+            'https://expired-ssl.test*' => function () {
+                throw new ConnectionException('cURL error 60: SSL certificate problem: certificate has expired');
+            },
+        ]);
+
+        $job = new CheckSingleMonitorJob($monitor);
+        $job->retryDelaySeconds = 0;
+        $job->handle();
+
+        Log::shouldHaveReceived('warning')
+            ->withArgs(function ($message, $context) use ($monitor) {
+                return str_contains($message, 'SSL certificate')
+                    && ($context['error_type'] ?? null) === 'ssl_certificate_failure'
+                    && ($context['monitor_id'] ?? null) === $monitor->id;
+            });
+    }
+
+    public function test_connection_timeout_is_logged_with_structured_context()
+    {
+        Log::spy();
+
+        $monitor = Monitor::factory()->create([
+            'user_id' => $this->user->id,
+            'url' => 'https://timeout-site.test',
+            'status' => 'up',
+        ]);
+
+        Http::fake([
+            'https://timeout-site.test*' => function () {
+                throw new ConnectionException('cURL error 28: Operation timed out after 5001 milliseconds');
+            },
+        ]);
+
+        $job = new CheckSingleMonitorJob($monitor);
+        $job->retryDelaySeconds = 0;
+        $job->handle();
+
+        Log::shouldHaveReceived('warning')
+            ->withArgs(function ($message, $context) use ($monitor) {
+                return str_contains($message, 'HTTP connection timeout')
+                    && ($context['error_type'] ?? null) === 'connection_timeout'
+                    && ($context['monitor_id'] ?? null) === $monitor->id;
+            });
+    }
+
+    public function test_guzzle_request_exception_is_handled_gracefully()
+    {
+        Log::spy();
+
+        $monitor = Monitor::factory()->create([
+            'user_id' => $this->user->id,
+            'url' => 'https://request-exception.test',
+            'status' => 'up',
+        ]);
+
+        Http::fake([
+            'https://request-exception.test*' => function () {
+                $request = new \GuzzleHttp\Psr7\Request('GET', 'https://request-exception.test');
+                throw new \GuzzleHttp\Exception\RequestException('Network transport dropped', $request);
+            },
+        ]);
+
+        $job = new CheckSingleMonitorJob($monitor);
+        $job->retryDelaySeconds = 0;
+        $job->handle();
+
+        $this->assertEquals('down', $monitor->fresh()->status);
+        Log::shouldHaveReceived('warning');
     }
 }
