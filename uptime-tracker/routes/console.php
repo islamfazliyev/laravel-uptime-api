@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 
 Schedule::command('uptime:check')->everySecond();
+Schedule::command('uptime:clean')->daily();
